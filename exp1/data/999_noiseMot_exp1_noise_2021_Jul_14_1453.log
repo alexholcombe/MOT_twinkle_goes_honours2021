@@ -1,8 +1,0 @@
-11.0354 	WARNING 	User requested fullscreen with size [3360 2100], but screen is actually [1680, 1050]. Using actual size
-15.0072 	DATA 	Keypress: space
-15.9013 	DATA 	Keypress: space
-27.8836 	DATA 	Mouse: Left button down, pos=(1228,776)
-28.2099 	DATA 	Mouse:  Left button up, pos=(1228,776)
-36.3625 	WARNING 	t of last frame was 20.28ms (=1/49)
-38.6672 	DATA 	Mouse: Left button down, pos=(1039,875)
-38.9847 	ERROR 	trialnum=1 ERROR,1 frames were longer than 19.97 ms apparently screen refreshes skipped, interframe durs were:[20.3] and was these frames: [14]

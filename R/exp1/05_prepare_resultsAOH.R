@@ -6,15 +6,14 @@ library(here)
 source(here("utils.R"))
 
 local_data_pth <- file.path(here("..","exp1"), "data")
-#local_data_pth <- file.path(here("..","exp1", "data"))
-dir(local_data_pth)
+#dir(local_data_pth)
 
 outpth <- here("exp1")
 
 files <- dir(local_data_pth, pattern = "*.csv") # get file names
 files <- tibble(fname=files)
 
-outputFname = "data.rds"
+outputFname = "data_exp1.rds"
 
 testWithTwoFiles<-T #hand-pick two files for testing purposes
 if (testWithTwoFiles) {
@@ -22,51 +21,41 @@ if (testWithTwoFiles) {
 }
 
 if (testWithTwoFiles) {
-  files <- files %>% filter(fname=="999_noiseMot_exp1_noise_2021_May_10_1229.csv" | 
-                          fname=="999_noiseMot_exp1_noise_2021_May_10_1219.csv")
+  files <- files %>% filter(fname=="999_noiseMot_exp1_noise_2021_Jul_15_1231.csv" | 
+                          fname=="999_noiseMot_exp1_noise_2021_Jul_14_1523.csv")
 }
 fnames <- as.array(files$fname)
 msg<- paste0("Number of files = ",as.character(nrow(fnames)), ".")
 print(msg)
 
-# #Try reading an individual file
-# testfile <- "999_noiseMot_exp1_noise_2021_May_10_1219.csv" # "999_noiseMot_exp1_noise_2021_Apr_26_1154.csv"
-# df<- read_csv(testfile,
-#          col_types = cols(.default = col_double(),
-#                             t_contr = col_character(),
-#                             mark_type = col_character(),
-#                             mouse.x = col_character(),
-#                             mouse.y = col_character(),
-#                             mouse.leftButton = col_character(),
-#                             mouse.midButton = col_character(),
-#                             mouse.rightButton = col_character(),
-#                             mouse.time = col_character(),
-#                             mouse.clicked_name = col_character(),
-#                             date = col_character(),
-#                             motbox_path = col_character(),
-#                             expName = col_character()
-#                           )
-#          )
-
+#Try reading an individual file
+try_reading_one_file <- T
+if (try_reading_one_file) {
+  #testfile <- "999_noiseMot_exp1_noise_2021_May_10_1219.csv"
+  testfile<- file.path(local_data_pth, fnames[1])
+  df_try <- read_csv(testfile)
+  # df_try <- read_csv(testfile,
+  #                            col_types = cols(.default = col_double(),
+  #                                mark_type = col_character(),
+  #                                mouse.x = col_character(),
+  #                                mouse.y = col_character(),
+  #                                mouse.leftButton = col_character(),
+  #                                mouse.midButton = col_character(),
+  #                                mouse.rightButton = col_character(),
+  #                                mouse.clicked_name = col_character(),
+  #                                date = col_character(),
+  #                                motbox_path = col_character(),
+  #                                expName = col_character()
+  #               )
+  # )
+  
+  #If the last trial is not completed, then some columns such as prot_id will be "NA"
+}  
 
 # http://jenrichmond.rbind.io/post/use-map-to-read-many-csv-files/
-df<- fnames %>%  #takes the filenames and reads each datafile into a tibble and then combines them all
+df<- fnames %>%                  # read each file into a tibble and combine them all
   map_dfr(function(x) 
-           read_csv(file.path(local_data_pth, x),
-            col_types = cols(.default = col_double(),
-                               t_contr = col_character(),
-                               mark_type = col_character(),
-                               mouse.x = col_character(),
-                               mouse.y = col_character(),
-                               mouse.leftButton = col_character(),
-                               mouse.midButton = col_character(),
-                               mouse.rightButton = col_character(),
-                               mouse.time = col_character(),
-                               mouse.clicked_name = col_character(),
-                               date = col_character(),
-                               motbox_path = col_character(),
-                               expName = col_character()
-                             )
+           read_csv(file.path(local_data_pth, x)
              )
   )
 #Practice trials have some different columns than real trials, which explains many of the "NA"s

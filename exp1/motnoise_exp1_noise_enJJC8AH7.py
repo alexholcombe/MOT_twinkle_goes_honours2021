@@ -21,8 +21,8 @@ import os  # handy system and path functions
 import sys  # to get file system encoding
 from psychopy.hardware import keyboard
 
-debug=True #Print more information to console
-autopilot=False
+debug=False #Print more information to console
+autopilot=True
 demo=False
 
 # Ensure that relative paths start from the same directory as this script

@@ -1,5 +1,0 @@
-10.9363 	WARNING 	User requested fullscreen with size [3360 2100], but screen is actually [1680, 1050]. Using actual size
-15.8759 	DATA 	Keypress: space
-16.4443 	DATA 	Keypress: space
-24.7880 	WARNING 	t of last frame was 20.78ms (=1/48)
-27.4088 	DATA 	Mouse: Left button down, pos=(1082,807)
