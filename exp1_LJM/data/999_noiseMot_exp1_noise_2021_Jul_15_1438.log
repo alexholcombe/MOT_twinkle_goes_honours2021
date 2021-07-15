@@ -1,0 +1,24 @@
+11.4565 	ERROR 	Screen apparently NOT the desired resolution of 2880x1800 pixels!
+instead it is [3360 2100]
+14.1060 	WARNING 	User requested fullscreen with size [2880 1800], but screen is actually [1680, 1050]. Using actual size
+19.0717 	DATA 	Keypress: space
+19.5400 	DATA 	Keypress: space
+24.0006 	WARNING 	t of last frame was 21.53ms (=1/46)
+26.6310 	DATA 	Mouse: Left button down, pos=(552,449)
+26.7165 	DATA 	Mouse:  Left button up, pos=(552,449)
+28.4504 	DATA 	Mouse: Left button down, pos=(628,676)
+28.5313 	DATA 	Mouse:  Left button up, pos=(628,676)
+30.0647 	DATA 	Mouse: Left button down, pos=(1070,327)
+30.1512 	DATA 	Mouse:  Left button up, pos=(1070,327)
+32.8325 	DATA 	Mouse: Left button down, pos=(1086,728)
+33.1594 	ERROR 	trialnum=0 ERROR,1 frames were longer than 19.95 ms apparently screen refreshes skipped, interframe durs were:[21.5] and was these frames: [21]
+33.1649 	DATA 	Mouse:  Left button up, pos=(1086,728)
+39.9277 	DATA 	Mouse: Left button down, pos=(817,226)
+40.0180 	DATA 	Mouse:  Left button up, pos=(817,226)
+40.6990 	DATA 	Mouse: Left button down, pos=(972,268)
+40.7826 	DATA 	Mouse:  Left button up, pos=(972,268)
+41.8160 	DATA 	Mouse: Left button down, pos=(515,786)
+41.8838 	DATA 	Mouse:  Left button up, pos=(515,786)
+44.5327 	DATA 	Mouse: Left button down, pos=(1018,780)
+44.8541 	DATA 	Mouse:  Left button up, pos=(1018,780)
+52.9495 	DATA 	Keypress: escape
