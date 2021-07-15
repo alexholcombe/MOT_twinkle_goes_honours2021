@@ -1,0 +1,10 @@
+﻿prot_id,trial_id,no_targets,noise_present,trajectory_id,mark_type,practice_trials.thisRepN,practice_trials.thisTrialN,practice_trials.thisN,practice_trials.thisIndex,text_3.started,text_3.stopped,text.started,text.stopped,image.started,image.stopped,P.objects[0].started,P.objects[0].tLastFrame,P.objects[0].finalx0,P.objects[0].finaly0,win.nDroppedFrames,,finalStimuliFrameTimes,timingHiccups,mouse.x,mouse.y,mouse.leftButton,mouse.midButton,mouse.rightButton,mouse.time,mouse.clicked_name,mouse.started,mouse.stopped,cue.started,cue.stopped,motbox_path,participant,protocol,expName,date,psychopyVersion,
+0,1,4,noise,86,mark,0,0,0,0,49.90767439699994,None,50.416336092000165,None,50.416336092000165,None,10.366570158500053,8.016550506500153,-548.5811526783981,-135.80361389047283,0,"[58.67519024 58.691843   58.70854451 58.72509402 58.74163946 58.75846906
+ 58.77515565 58.79180619 58.80851238 58.82476099 58.84181334 58.85850504
+ 58.87513568 58.8917874  58.90846154 58.92514453 58.9418775  58.9585797
+ 58.97515662 58.99177447]",20,[401.0],[313.0],[],[],[],[10.358490852499926],[],7.999996394500158,None,51.00326954399998,None,../,999,1,noiseMot_exp1_noise,2021_Jul_13_1658,2021.1.4,
+0,2,2,no_noise,173,mark,0,1,1,1,,,61.97879044000001,None,61.97879044000001,None,9.832262586500292,8.015630589500688,210.67891224618808,333.2152246595115,0,"[72.04052227 72.05717769 72.07398298 72.09066869 72.1069843  72.12372727
+ 72.14040208 72.15709466 72.17383778 72.19040813 72.20707847 72.2237312
+ 72.24039685 72.25703266 72.27374939 72.29035792 72.30701148 72.32369762
+ 72.3404162  72.35708881]",20,[177.0],[288.0],[],[],[],[9.821086566500526],[],7.999040467500436,None,62.547999320000145,None,../,999,1,noiseMot_exp1_noise,2021_Jul_13_1658,2021.1.4,
+,,,,,,,,,,,,73.28592106699989,None,73.28592106699989,None,,,,,,,,,,,,,,,,,,,,,,,,,

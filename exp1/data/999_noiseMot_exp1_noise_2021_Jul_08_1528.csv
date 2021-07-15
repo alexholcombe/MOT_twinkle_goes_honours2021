@@ -1,0 +1,6 @@
+﻿prot_id,trial_id,no_targets,noise_present,trajectory_id,mark_type,practice_trials.thisRepN,practice_trials.thisTrialN,practice_trials.thisN,practice_trials.thisIndex,text_3.started,text_3.stopped,text.started,text.stopped,image.started,image.stopped,P.objects[0].started,P.objects[0].tLastFrame,P.objects[0].finalx0,P.objects[0].finaly0,finalStimuliFrameTimes,timingHiccups,mouse.x,mouse.y,mouse.leftButton,mouse.midButton,mouse.rightButton,mouse.time,mouse.clicked_name,mouse.started,mouse.stopped,cue.started,cue.stopped,motbox_path,participant,protocol,expName,date,psychopyVersion,
+0,1,4,noise,86,mark,0,0,0,0,19.257776007999837,None,20.7983175319996,None,20.7983175319996,None,9.526132705500004,8.010239832500247,-549.438446789463,-135.41426387609127,"[29.95781175 29.97404058 29.99035045 30.00759702 30.02442704 30.04079809
+ 30.05775573 30.07385096 30.09114645 30.10769504 30.1242058  30.14050492
+ 30.15770616 30.17384553 30.1904436  30.20792836 30.22449002 30.24039298
+ 30.2572728  30.2737305 ]",20,[289.0],[194.0],[],[],[],[9.522340187500049],[],8.010298179500296,None,21.372627155999908,None,../,999,1,noiseMot_exp1_noise,2021_Jul_08_1528,2021.1.4,
+,,,,,,,,,,,,31.19011318899993,None,31.19011318899993,None,,,,,,,,,,,,,,,,,,,,,,,,

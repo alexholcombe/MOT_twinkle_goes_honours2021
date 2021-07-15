@@ -1,0 +1,7 @@
+prot_id,trial_id,noise_id,trajectory_id,t_contr,mark_type
+0,1,200,200,MOT,mark
+0,2,205,205,MOT,mark
+0,3,234,234,MOT,mark
+0,4,212,212,MOT,noMark
+0,5,228,228,MOT,noMark
+0,6,216,216,MOT,noMark

@@ -1,0 +1,212 @@
+---
+title: "Analysis - exp1"
+author: "Filip Děchtěrenko"
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+
+# Preparation
+
+## Load data and libraries
+
+```{r load data and libraries, warning = F, message = F,echo=F}
+set.seed(191124)
+library(tidyverse); theme_set(theme_classic(16))
+library(lme4)
+library(here)
+library(statutils)
+
+source(here("R","utils.R"))
+
+plots_dir <- here("plots", "exp2")
+test_dir(plots_dir)
+
+df <- read_rds(here("data","exp2","discrimination","range_estim","data_200219.rds"))
+
+df_participants <- readxl::read_excel(here("data","exp2","discrimination","range_estim","participant_exp2_range_estim.xlsx"))
+
+```
+
+# Introduction
+
+Purpose of this experiment was to estimate individual differences in detection of Gabor patches in 1/f noise.
+
+# Method
+
+## Participants
+
+In total, we collected data from `r df %>% pull(subject_id) %>% unique() %>% length()` participants. All of them were students from our lab pool and their participated for a course credit. All of them had normal or corrected-to-normal vision.
+
+## Stimuli
+
+We used Gabor patches (phase = 0.25, orientation: $\theta=45^{\circ}$, bandwidth=$1^{\circ}$) with varying contrast. Each participant was presented with 8 contrast levels. In first 7 subjects, we used contrast levels `r df %>% filter(subject_id == 1) %>% pull(contr_level) %>% sort() %>% unique() %>% as.character %>% paste(collapse = ", ")`. For subjects 8-17, we used following contrasts `r df %>% filter(subject_id == 8) %>% pull(contr_level) %>% sort() %>% unique() %>% as.character %>% paste(collapse = ", ")`. Finally, for remaining 17 participants, we used contrast levels `r df %>% filter(subject_id == 18) %>% pull(contr_level) %>% sort() %>% unique() %>% as.character %>% paste(collapse = ", ")`. The background was 1/f noise. 
+
+## Procedure
+
+Each trial was standard 2IFC procedure and looked as follows. First, participant was presented with a fixation cross (500 ms) followed by two succeding 1/f noises (each 250 ms with ISI 200 ms) and Gabor patch was additively randomly add to one of those (with its contrast scaled by contrast level set for given trial). Participant responded by pressing keys, whether Gabor patch was present in first (left arrow key) or in second (right arrow key) with unlimited time to respond. There were 14 blocks, while one block had 40 trials (8 contrast levels, 5 times each of them) resulting in 560 trials in total. Participants could take a break between blocks. three different sets of contrast levels were selected in this experiment, as we encountered floor and ceiling effects.
+
+# Results
+
+For each participant, we fitted the data using formula $P(c; c_T, \beta) = \phi(0.5*(\frac{c}{c_T})^\beta)$, where $c_T$ and $\beta$ were parameters found by MLE estimation. We observed floor and ceiling effects, which looked as follows.
+
+```{r floor-effect-fit, echo=F}
+
+df %>% filter(subject_id == 2) %>% group_by(subject_id) %>% do(mle_SDT(.)) %>% left_join(df %>% group_by(subject_id) %>% nest(), by = "subject_id") %>% 
+  purrr::pwalk(f)
+
+
+
+```
+
+```{r ceiling-effect-fit, echo=F}
+
+df %>% filter(subject_id == 12) %>% group_by(subject_id) %>% do(mle_SDT(.)) %>% left_join(df %>% group_by(subject_id) %>% nest(), by = "subject_id") %>% 
+  purrr::pwalk(f)
+
+
+
+```
+
+## Find bad/good fit
+
+We needed to estimate, what is good and bad fit. Standard books on psychophysics recommend computing negative log likelihood (nll). There are no guidelines, as they are case specific. Therefore, we first computed nlls for all fits and visualized the fits using histogram.
+
+```{r,echo=F}
+fit_par <- df %>% 
+  group_by(subject_id) %>% 
+  do(mle_SDT(.))
+
+fit_df <- fit_par %>% left_join(df %>% group_by(subject_id) %>% nest(), by = "subject_id")
+
+df_corr_limits <- df %>% 
+  group_by(subject_id, contr_level) %>% 
+  summarize(correct = mean(correct)) %>% 
+  group_by(subject_id) %>% 
+  summarize(min_corr = min(correct), max_corr = max(correct))
+
+
+eval_fit <- fit_df %>%
+  rowwise() %>% 
+  mutate(nll = nll(c(cT,beta),data$contr_level,data$correct)) %>% 
+  left_join(df_corr_limits, by = "subject_id") %>% 
+  mutate(min_rule = min_corr  < 0.7, max_rule = max_corr > 0.8)
+
+
+```
+
+```{r eval fit histogram, echo=F}
+cutoff_val <- 220
+eval_fit %>% ggplot(aes(x = nll)) + geom_histogram(bins = 30) + 
+  geom_vline(xintercept = cutoff_val)
+```
+
+From the histogram, we can estimated that nll > 220 would mean bad fit. Additionally, we also set that the fit was good when it contain at least one data point close to lower and upper asymptote.
+
+Therefore, we are using following rules to find good/bad fit
+
+* Highest accuracy in data is > 0.8
+* Lowest accuracy is < 0.7
+* Negative log likelihood > 220
+
+This strategy resulted in `r eval_fit %>% filter(min_rule,max_rule, nll < cutoff_val) %>% pull(subject_id) %>% length()` good fits. All of the godd fits were for the data from final range of contrasts (subjects 18-34). It is noteworthy that even the wider range of contrasts does not ensure that the fit will be good, for participants id = 25, 31 and 32, the task was still too difficult and they scored around chance level.
+
+## Summarize accuracy
+
+For each contrast level, we can describe aggregated accuracy. First, we compute average accuracy per subject and contrast level and then summarize responses per contrast level. In following table, we show descriptive statistics for all contrast levels (when n<17, it means that is from the batches with low/high contrasts that produced ceiling effects).
+
+```{r,echo=F}
+df %>% 
+  filter(subject_id %in% (eval_fit %>% 
+  filter(min_rule,max_rule, nll < cutoff_val) %>% pull(subject_id))) %>%   group_by(subject_id,contr_level) %>% 
+  summarize(correct = mean(correct)) %>% 
+  group_by(contr_level) %>% 
+  summarize(n = n(), min = min(correct),max = max(correct), IQR = IQR(correct), mean = mean(correct), median = median(correct)) %>% knitr::kable(digits = 2, caption = "Descriptive statistics (accuracy) for each contrast level")
+```
+
+In following Figure, we show averaged data from good fits only.
+
+```{r,echo=F}
+
+p <- df %>% 
+  filter(subject_id %in% (eval_fit %>% 
+  filter(min_rule,max_rule, nll < cutoff_val) %>% pull(subject_id))) %>% 
+  group_by(subject_id,contr_level) %>% 
+  summarize(correct = mean(correct)) %>% 
+  ggplot(aes(x  = contr_level, y = correct, group = subject_id)) + 
+  scale_x_log10(name = "Contrast scaling factor", breaks = df$contr_level %>% unique() %>% sort()) +
+  geom_path(alpha = 0.2) +
+  stat_summary(aes(group = 1),fun.data = "mean_cl_boot") + 
+  ylab("Response accuracy")
+
+ggsave(file.path(plots_dir, sprintf("exp2_range_estim_results_noleg.svg")), plot = p + theme(legend.position = "none"),width = 6, height = 6)
+ggsave(file.path(plots_dir, sprintf("exp2_range_estim_results.svg")), plot = p,width = 6, height = 6)
+
+```
+
+The variability between subjects is surprisingly low. 
+
+## Variability of parameteres of PF
+
+Finally, we show descriptive statistics for two parameters of fitted psychometric curves. 
+
+```{r,echo=F}
+desc_stat_params <- rbind(eval_fit %>% 
+        filter(min_rule,max_rule, nll < cutoff_val) %>% 
+  ungroup() %>% 
+  summarize_at(vars(cT),list(mean = mean, sd = sd, median = median, min = min, max = max, IQR = IQR)),
+eval_fit %>% 
+  filter(min_rule,max_rule, nll < cutoff_val) %>% 
+  ungroup() %>% 
+  summarize_at(vars(beta),list(mean = mean, sd = sd, median = median, min = min, max = max, IQR = IQR)))%>% 
+  mutate(var = c("cT","beta")) %>% 
+  select(var, everything())
+
+desc_stat_params %>% 
+  knitr::kable(digits = 2, caption = "parameters for pf curves")
+
+```
+
+Using these values, we can estimate ranges that we can use for further experiments (using median estimate of parameters). 
+
+* accuracy 60%: `r inv_p_corr_fun(0.6, desc_stat_params %>% filter(var == "cT") %>% pull(median), desc_stat_params %>% filter(var == "beta") %>% pull(median)) %>% round(2)`
+* accuracy 70%: `r inv_p_corr_fun(0.7, desc_stat_params %>% filter(var == "cT") %>% pull(median), desc_stat_params %>% filter(var == "beta") %>% pull(median)) %>% round(2)`
+* accuracy 80%: `r inv_p_corr_fun(0.8, desc_stat_params %>% filter(var == "cT") %>% pull(median), desc_stat_params %>% filter(var == "beta") %>% pull(median)) %>% round(2)`
+* accuracy 90%: `r inv_p_corr_fun(0.9, desc_stat_params %>% filter(var == "cT") %>% pull(median), desc_stat_params %>% filter(var == "beta") %>% pull(median)) %>% round(2)`
+
+
+# Appendix - visualize the fits
+
+For the sake of completeness, we also show fits for all participants. they are divided into good and bad fits
+
+## Good fits
+
+```{r}
+eval_fit %>% 
+  filter(min_rule,max_rule, nll < cutoff_val) %>% 
+  purrr::pwalk(f)
+```
+
+## Bad fits
+
+```{r}
+eval_fit %>% 
+  filter(!min_rule|max_rule|nll >= cutoff_val) %>% 
+  purrr::pwalk(f)
+```
+
+## Descriptive statistics all data
+
+Here we show descriptive statistics for accuracies when using all data
+
+```{r,echo=F}
+df %>% 
+  group_by(subject_id,contr_level) %>% 
+  summarize(correct = mean(correct)) %>% 
+  group_by(contr_level) %>% 
+  summarize(n = n(), min = min(correct),max = max(correct), IQR = IQR(correct), mean = mean(correct), median = median(correct)) %>% knitr::kable(digits = 2, caption = "Descriptive statistics (accuracy) for each contrast level")
+```
+```

@@ -1,0 +1,7 @@
+prot_id,trial_id,no_targets,noise_present,trajectory_id,mark_type
+0,1,4,noise,86,mark
+0,2,2,no_noise,173,mark
+0,3,1,no_noise,42,mark
+0,4,1,noise,104,mark
+0,5,4,noise,107,mark
+0,6,2,no_noise,119,mark

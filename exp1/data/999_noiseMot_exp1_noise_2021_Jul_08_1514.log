@@ -1,0 +1,4 @@
+11.7372 	WARNING 	User requested fullscreen with size [3360 2100], but screen is actually [1680, 1050]. Using actual size
+16.3062 	DATA 	Keypress: space
+16.8511 	DATA 	Keypress: space
+26.8345 	DATA 	Mouse: Left button down, pos=(968,679)

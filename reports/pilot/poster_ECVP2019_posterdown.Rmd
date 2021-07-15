@@ -1,0 +1,244 @@
+---
+title: Multiple Object Tracking in noise background
+author:
+  - name: Filip Děchtěrenko
+    orcid: 0000-0003-0472-915X
+    affil: 1
+    email: dechterenko@praha.psu.cas.cz
+    twitter : FDechterenko
+    main: true
+  - name: Jiří Lukavský
+    affil: 1
+    twitter : jlukavsky
+    main: true
+affiliation:
+  - num: 1
+    address: Institute of Psychology, Czech Academy of Sciences
+  
+column_numbers: 3
+logoright_name: https&#58;//raw.githubusercontent.com/brentthorne/posterdown/master/images/betterhexlogo.png
+logoleft_name: d:/Documents/git/motNoise/plots/LOGO_PSU_2016en_posterdown.png
+logocenter_name: d:/Documents/git/motNoise/plots/qrcode_poster_osf.png
+primary_colour: "#0075b1"
+secondary_colour: "#93abc2"
+output: 
+  posterdown::posterdown_betterport:
+    self_contained: false
+    pandoc_args: --mathjax
+    number_sections: false
+main_findings: 
+  - Tracking moving objects in 1/f noise is **difficult**.
+  - Difficulty could be explained by **trajectory statistics**.
+bibliography: D:/Dropbox/library.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r load data and libraries, include=FALSE}
+library(tidyverse)
+theme_set(theme_classic(16))
+library(here)
+
+source(here("R","utils.R"))
+
+data_pth <- here("data","cleandata")
+df_all <- readRDS(file.path(data_pth, "df_all_190328.rds"))
+
+
+```
+
+# Introduction
+
+People are able to successfully track four moving objects among four distractors [@pylyshyn1988]. Many factors influencing tracking performance has been identified in the past, but surprisingly, the effect of object detectability have not been addressed yet. 
+
+**How would be tracking performance impaired when we use more naturalistic setting?**
+
+```{r exp-scheme, fig.align='center',out.width='60%', fig.cap='Typical MOT design (left) and our design (right)'}
+knitr::include_graphics(here("plots","scheme_poster.png"))
+
+```
+
+# Methods
+
+* `r df_all %>% select(participant) %>% distinct() %>% nrow()` subjects
+* 4 conditions (scaling contrast factor _c_ = 0.1, 0.16, 0.21, 0.25)
+* 1/f noise, Gabor patches as target
+* 160 trials (4*40 conditions), 6 seconds of movement
+* same trajectories were used for all four conditions
+* experiment programmed in PsychoPy
+* participants clicked on the targets, successful click increased the size of the object
+
+
+```{r mot-scheme, fig.align='center', out.width='48%',fig.cap='MOT in uniform background and noise'}
+knitr::include_graphics(here("plots","scheme_exp.png"))
+
+```
+
+# Contrast selection
+
+Values were selected by detection experiment in fovea, the equation was used from @bradley2014
+
+```{r det-scheme, fig.align='center', out.width='90%',fig.cap='Experimental scheme for contrast selection'}
+knitr::include_graphics(here("plots","detection_fovea_scheme.svg"))
+
+```
+
+Contrast values were selected to have foveal d'=4,8,12, and 16
+
+# Results
+
+```{r results, echo = F,message=F,warning=F}
+answ <- df_all$mouse.clicked_name %>% 
+  str_remove("\\[") %>% 
+  str_remove("\\]") %>% 
+  str_remove_all("'") %>% 
+  str_remove_all(" ") %>% 
+  str_remove_all("o1_copy_") %>% 
+  str_split(",", simplify = T)
+corr_trials <- answ[,5]==""
+df_all$nCorrect <- matrix(data = answ %in% c("0","1","2","3"), ncol = 5) %>% rowSums()
+df_all$nCorrect[!corr_trials] <- NA
+df_withmouse <- readRDS(file.path(data_pth, "df_withmouse_190328.rds"))
+
+answ <- df_withmouse$mouse.clicked_name %>% 
+  str_remove("\\[") %>% 
+  str_remove("\\]") %>% 
+  str_remove_all("'") %>% 
+  str_remove_all(" ") %>% 
+  str_remove_all("o1_copy_") %>% 
+  str_split(",", simplify = T)
+corr_trials <- answ[,5]==""
+
+df_withmouse$nCorrect <- matrix(data = answ %in% c("0","1","2","3"), ncol = 5) %>% rowSums()
+df_withmouse$nCorrect[!corr_trials] <- NA
+
+df_trajectories <- readRDS(file.path(data_pth, "trajectories_190328.rds"))
+#df_trajends <- df_withmouse %>% select(trajectory_id,start_time,) %>% mutate(end_time = start_time + 6)
+#df_trajectories %>% left_join(df_trajends) %>% filter(t == end_time)
+
+mouse_xall <- df_withmouse$mouse_xall %>% 
+  str_remove("\\[") %>% 
+  str_remove("\\]") %>% 
+  str_remove_all("'") %>% 
+  str_remove_all(" ") %>% 
+  str_split(",", simplify = T)
+
+mouse_xall <- matrix(as.numeric(mouse_xall), ncol = ncol(mouse_xall))
+
+mouse_yall <- df_withmouse$mouse_yall %>% 
+  str_remove("\\[") %>% 
+  str_remove("\\]") %>% 
+  str_remove_all("'") %>% 
+  str_remove_all(" ") %>% 
+  str_split(",", simplify = T)
+
+mouse_yall <- matrix(as.numeric(mouse_yall), ncol = ncol(mouse_yall))
+
+nclicks <- rowSums(!is.na(mouse_xall))
+df_withmouse$nClicks <- nclicks
+
+df_complete <- df_all %>% filter(participant > 15)
+
+p <- df_complete %>% group_by(participant, t_contr) %>% 
+  summarize(nCorrect = mean(nCorrect, na.rm = T)) %>% 
+  ggplot(aes(x = t_contr, y = nCorrect)) + stat_summary(fun.data = "mean_cl_boot") + ylim(0,4) + ggtitle("Number of correctly selected targets") + xlab("contrast level") + ylab("# targets") + theme(aspect.ratio = 1) + geom_path(alpha = 0.15, position = position_jitter(0.1))
+
+#df_all %>% group_by(trajectory_id, t_contr) %>% summarize(nCorrect = mean(nCorrect, na.rm = T)) %>% 
+#  ggplot(aes(x = t_contr, y = nCorrect)) + geom_path(alpha = 0.15) + 
+#  stat_summary(fun.data = "mean_cl_boot") + ylim(0,4) + theme(aspect.ratio = 1)
+
+#p  
+ggsave(here("plots","results_ncorrect.svg"),p)
+
+p2 <- df_withmouse %>% group_by(participant, t_contr) %>% 
+  summarize(nClicks = mean(nClicks)) %>% 
+  ggplot(aes(x = t_contr, y = nClicks)) + stat_summary(fun.data = "mean_cl_boot")+ ggtitle("Number of clicks") + xlab("contrast level") + ylab("# clicks") + theme(aspect.ratio = 1)
+ggsave(here("plots","results_nclicks.svg"), p2)
+
+df_traj1 <- df_trajectories %>% reshape_trajectories()
+df_traj2a <- df_traj1 %>% group_by(trajectory_id) %>% do(describe_trajectory(.))
+df_traj2b <- df_traj1 %>% group_by(trajectory_id) %>% do(describe_trajectory_tgtdist(.))
+
+df_traj_stata <- df_all %>% group_by(trajectory_id,t_contr) %>% summarize(nCorrect = mean(nCorrect, na.rm = T)) %>% left_join(df_traj2a, by = "trajectory_id") %>% 
+  mutate(target = if_else(target, "target", "distractor"))
+
+df_traj_statb <- df_all %>% group_by(trajectory_id,t_contr) %>% summarize(nCorrect = mean(nCorrect, na.rm = T)) %>% left_join(df_traj2b, by = "trajectory_id")
+
+
+p_chull <- df_traj_stata %>% ggplot(aes(x = chull_mean, y = nCorrect)) + geom_point() + geom_smooth(method = "lm")+ facet_grid(target~t_contr)
+p_tgtmean <- df_traj_stata %>% ggplot(aes(x = dist_from_tgt_center_mean, y = nCorrect)) + geom_point() + geom_smooth(method = "lm")+ facet_grid(target~t_contr)
+ggsave(here("plots","results_chull.svg"), p_chull)
+ggsave(here("plots","results_tgt_mean.svg"), p_tgtmean)
+
+
+order_trajectories <- 
+  df_complete %>%
+  group_by(trajectory_id) %>% 
+  do(Hmisc::smean.cl.boot(.$nCorrect) %>% t() %>% as_tibble()) %>% 
+  arrange(Mean) %>% 
+  ungroup() %>% 
+  mutate(trajectory_id = forcats::as_factor(as.character(trajectory_id)))
+
+
+p_individual_trajectories <-
+  order_trajectories %>%
+  ggplot(aes(x = trajectory_id, xend = trajectory_id, y = Lower, yend = Upper, group = 1)) +
+  geom_segment(size = 1.2) +
+  geom_point(aes(y=Mean), size = 3) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylab("# correct") + 
+  ylim(0,4) + 
+  xlab("individual trajectories (sorted)") + 
+  theme(aspect.ratio = 1) + 
+  theme(axis.text.x = element_blank(), 
+        axis.ticks.x = element_blank())
+ggsave(here("plots","results_trajectories.svg"), p_individual_trajectories)
+```
+
+* Accuracy increased with target detectability
+* Number of clicks was large for targets with low detectability
+
+```{r results-ncorr-nclicks, out.width='90%',warning=F,fig.cap='Accuracy for different contrasts (left). Number of clicks for different contrasts (right)'}
+knitr::include_graphics(here("plots","results_main.png"))
+
+```
+
+# Differences between trajectories 
+
+When looking on individual trajectories, can we express, what makes the tracking difficult? We can explore the properties of individual trajectories.
+
+```{r traj-correct, fig.align='center', out.width='50%',fig.cap='Differences between trajectories'}
+knitr::include_graphics(here("plots","results_trajectories.png"))
+```
+
+
+# Evaluate trajectories
+
+We have repeated presentation of same trajectories for all subjects, so we can describe each trajectory by some function and visualize the relationship with tracking accuracy 
+
+
+```{r traj-var, fig.align='center', out.width='99%',fig.cap='Evaluation of trajectory'}
+knitr::include_graphics(here("plots","scheme_MOT_traj_var.png"))
+
+```
+
+# Conclusion
+
+* Tracking performance decreases when the target detectability is low
+* Our observations show it is necessary to distinguish
+between detectability in static/dynamic conditions. When objects stopped, the targets blended with background, which resulted in increased higher number of clicks required to find the targets
+* The decrease in performance is probably related to both decreased detectability of the objects and increased spatial uncertainty when objects stop moving.
+* Trajectories differ in their difficulty. With increasing distance of targets from their center, the tracking becomes more difficult in low detectability condition.
+
+# Acknowledgment
+
+This research was supported by Czech Science Foundation GA19-07690S and RVO 68081740.
+
+# References
+
+```{r, include=FALSE}
+knitr::write_bib(c('knitr','rmarkdown','posterdown','pagedown'), 'packages.bib')
+```
+

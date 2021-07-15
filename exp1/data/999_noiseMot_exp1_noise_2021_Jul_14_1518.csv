@@ -1,0 +1,8 @@
+﻿practice_trials.thisRepN,practice_trials.thisTrialN,practice_trials.thisN,practice_trials.thisIndex,prot_id,trial_id,no_targets,noise_present,trajectory_id,mark_type,P.objects[0].started,P.objects[0].tLastFrame,P.objects[0].finalx0,P.objects[0].finaly0,win.nDroppedFrames,finalStimFrameTimes,timingHiccupsInLastFramesOfStimuli,motbox_path,participant,protocol,expName,date,psychopyVersion,
+,,,,,,,,,,8.029599961191707,8.013454921187076,-549.0416262609767,-135.59448449872113,0,"[16.177736   16.580419   17.088214   16.75828    16.42057    16.989084
+ 16.642433   16.302346   17.002443   16.226423   17.175075   16.596243
+ 16.413917   16.612744   16.708728   17.093099   16.431404   16.676639
+ 16.630042   16.581221   16.812066   16.364591   16.757716   16.8935
+ 16.55817    16.446004   16.964982   16.377166   16.392233   17.214949
+ 16.60991601 16.443562   17.06363    16.487103   16.551383   16.847747
+ 16.61727    16.541796   16.884004  ]",0,,,,,,,

@@ -1,0 +1,242 @@
+---
+title: Tracking objects in 1/f noise and plain backgrounds
+author:
+  - name: Filip Děchtěrenko
+    orcid: 0000-0003-0472-915X
+    affil: 1
+    email: dechterenko@praha.psu.cas.cz
+    twitter : FDechterenko
+    main: true
+  - name: Jiří Lukavský
+    orcid: 0000-0002-1082-229X
+    affil: 1
+    twitter : jlukavsky
+    main: true
+  - name: Christina J. Howard
+    orcid: 0000-0002-8755-1109
+    affil: 2
+    main: true
+affiliation:
+  - num: 1
+    address: Institute of Psychology, Czech Academy of Sciences
+  - num: 2  
+    address: Nottingham Trent University
+  
+column_numbers: 4
+poster_width: "46.8in"
+poster_height: "40.1in"
+logoright_name: https&#58;//raw.githubusercontent.com/brentthorne/posterdown/master/images/betterhexlogo.png
+logoleft_name: d:/Documents/git/motNoise/plots/LOGO_PSU_2016en_posterdown.png
+logocenter_name: d:/Documents/git/motNoise/plots/qrcode_poster_osf.png
+primary_colour: "#0075b1"
+secondary_colour: "#93abc2"
+output: 
+  posterdown::posterdown_html:
+    self_contained: false
+    pandoc_args: --mathjax
+    number_sections: false
+main_findings: 
+  - Tracking moving objects in 1/f noise is **difficult**.
+  - Difficulty could be explained by **trajectory statistics**.
+  - Decrease in accuracy is affected by both static and dynamic detectability.
+bibliography: D:/Dropbox/library.bib
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r load data and libraries, include=FALSE}
+library(tidyverse)
+theme_set(theme_classic(16))
+library(here)
+
+source(here("R","utils.R"))
+
+
+df_pilot <- readRDS(file.path(here("data","pilot"), "df_all_190328.rds"))
+df_exp1 <- readRDS(file.path(here("data","exp1"), "data_191121.rds"))
+df_exp2_range_estim <- read_rds(here("data","exp2","detection","range_estim","data_200219.rds")) %>% 
+  filter(subject_id >=18)
+
+fit_par <- df_exp2_range_estim %>% 
+  group_by(subject_id) %>% 
+  do(mle_SDT(.))
+
+fit_df <- fit_par %>% left_join(df_exp2_range_estim %>% group_by(subject_id) %>% nest(), by = "subject_id")
+
+df_corr_limits <- df_exp2_range_estim %>% 
+  group_by(subject_id, contr_level) %>% 
+  summarize(correct = mean(correct)) %>% 
+  group_by(subject_id) %>% 
+  summarize(min_corr = min(correct), max_corr = max(correct))
+
+
+eval_fit <- fit_df %>%
+  rowwise() %>% 
+  mutate(nll = nll(c(cT,beta),data$contr_level,data$correct)) %>% 
+  left_join(df_corr_limits, by = "subject_id") %>% 
+  mutate(min_rule = min_corr  < 0.7, max_rule = max_corr > 0.8)
+df_exp2_good_fits <- df_exp2_range_estim %>% 
+  filter(subject_id %in% (eval_fit %>% 
+  filter(min_rule,max_rule, nll < 220) %>% pull(subject_id))) 
+```
+# Introduction
+
+Past research has shown that people can reliably track several moving objects among distractors [@pylyshyn1988]. Although laboratory studies typically use clearly visible objects and a uniform background, this is rarely the case for tracking in real life. Therefore, the contribution of visibility and attentional enhancement of visibility to tracking performance is currently underexplored.
+
+**How would be tracking performance impaired when we use more naturalistic setting?**
+
+# Experiment 1
+
+We used Gabor patches as targets and 1/f noise as a background
+
+```{r exp-scheme, fig.align='center',out.width='70%', fig.cap='Typical MOT design (left) and our design (right)'}
+knitr::include_graphics(here("plots","scheme_poster.png"))
+
+```
+
+
+# Methods
+
+* `r df_pilot %>% select(participant) %>% distinct() %>% nrow()` subjects
+* 4 conditions  
+scaling contrast factor _c_ = 0.1, 0.16, 0.21, 0.25, correspond to foveal d' = 4, 8, 12, and 16
+* 1/f noise, Gabor patches as target
+* 160 trials (4*40 conditions), 6 seconds of movement
+* same trajectories were used for all four conditions
+* experiment was programmed in PsychoPy
+* participants clicked on the targets, successful click increased the size of the object
+```{r mot-scheme, fig.align='center', out.width='65%',fig.cap='Example of typical MOT task'}
+knitr::include_graphics(here("plots","scheme_exp.png"))
+
+```
+
+```{r foveal-detection-scheme, fig.align='center', out.width='75%',fig.cap='Detection procedure used to measure sensitivy of gabor detection'}
+knitr::include_graphics(here("plots","detection_fovea_scheme.png"))
+
+```
+
+
+# Results
+
+* Accuracy increased with target detectability
+* Number of clicks was large for targets with low detectability
+
+```{r results-ncorr-nclicks, out.width='90%',warning=F,fig.cap='Accuracy for different contrasts (left). Gray line represents individual participants. Number of clicks for different contrasts (right).'}
+knitr::include_graphics(here("plots","results_main.png"))
+
+```
+
+# Experiment 2
+
+* Number of clicks was large for targets with low detectability, maybe the decrease in tracking accuracy was result of loss of targets after movement.
+* Would object highlighting in query phase increase tracking accuracy?
+
+
+```{r mot-scheme-exp1, fig.align='center', out.width='70%', fig.cap='MOT with and without highlighted targets'}
+knitr::include_graphics(here("plots","exp1","scheme_exp1.png"))
+
+```
+
+# Methods
+
+Same as in experiment 1, with exception:
+
+* `r df_exp1 %>% select(subject_id) %>% distinct() %>% nrow()` subjects
+* 4 conditions 
+    - 3 noise conditions (scaling contrast factor _c_ = 0.12, 0.14, 0.17, based on Exp. 1)
+    - 1 plain background MOT with dots as targets
+* Targets highlighted after movement in half of trials
+* 256 trials (28 $\times$ 4 conditions $\times$ target highlighting yes/no)
+* same trajectories were used for all participants
+
+Study was preregistered: https://osf.io/54p8m
+
+<br/><br/><br/>
+
+# Results
+
+Tested using GLMM with subject and trajectory as random factors
+
+* Accuracy increased with higher detectability  (difference between scaling contrast 0.12 and scaling contrast 0.17: Cohen's *d* = 0.54)
+* Difference between target highlighting were significant but small (Cohen's *d* < 0.1)
+* Plain background MOT was significantly easier and the accuracy correlated with accuracy in noise conditions (Pearson's *r* = .62 - .66)
+
+```{r results-exp1, fig.align='center', out.width='55%',fig.cap='Results for experiment 1',fig.width=6}
+
+knitr::include_graphics(here("plots","exp1","exp1_results.png"))
+
+```
+
+# Differences between participants
+
+```{r}
+cutoff_val <- 220
+n_subjects <- df_exp2_range_estim %>% pull(subject_id) %>% unique() %>% length()
+n_subjects_invalid <- n_subjects- (df_exp2_good_fits %>% pull(subject_id) %>% unique() %>% length())
+
+desc_stat_params <- rbind(eval_fit %>% 
+        filter(min_rule,max_rule, nll < cutoff_val) %>% 
+  ungroup() %>% 
+  summarize_at(vars(cT),list(mean = mean, sd = sd, median = median, min = min, max = max, IQR = IQR)),
+eval_fit %>% 
+  filter(min_rule,max_rule, nll < cutoff_val) %>% 
+  ungroup() %>% 
+  summarize_at(vars(beta),list(mean = mean, sd = sd, median = median, min = min, max = max, IQR = IQR)))%>% 
+  mutate(var = c("cT","beta")) %>% 
+  select(var, everything())
+
+```
+
+Participants significantly differed in tracking accuracy (significant random factor). Maybe the differences were due to the different detection thresholds
+
+* We measured foveal detection to see the variance between subjects
+* constant stimuli - wider ranges of values (8 steps, `r range(df_exp2_good_fits$contr_level) %>% paste(collapse = "-")`), fitted by functions from @bradley2014
+* 2IFC paradigm (2 $\times$ 250 ms)
+* `r n_subjects` subjects, but `r n_subjects_invalid` showed poor fit
+
+
+```{r results-exp2, fig.align='center', out.width='47%',fig.cap='Accuracy for each contrast level'}
+knitr::include_graphics(here("plots","exp2","exp2_range_estim_results_final.png"))
+
+```
+
+Differences between subjects were small:
+
+* $c_T$ = `r desc_stat_params %>% filter(var == "cT") %>% pull(min) %>% round(2)`-`r desc_stat_params %>% filter(var == "cT") %>% pull(max) %>% round(2)`
+* $\beta$ = `r desc_stat_params %>% filter(var == "beta") %>% pull(min) %>% round(2)`-`r desc_stat_params %>% filter(var == "beta") %>% pull(max) %>% round(2)`
+
+
+
+# Differences between trajectories 
+
+When looking on individual trajectories, can we express, what makes the tracking difficult? We can explore the properties of individual trajectories.
+
+We have repeated presentation of same trajectories for all subjects in Experiment 1 and 2, so we can describe each trajectory by some function and visualize the relationship with tracking accuracy 
+
+
+```{r traj-var, fig.align='center', out.width='91%',fig.cap='Evaluation of trajectories in Experiment 1. Experiment 2 yielded similar results.'}
+knitr::include_graphics(here("plots","scheme_MOT_traj_var.png"))
+
+```
+
+# Conclusion
+
+* Tracking performance decreases when the target detectability is low
+* General tracking performance appears to be partly determined by a combination of detectability both during and after the tracking phase.
+* Performance in noise tracking shares individual variability with performance in traditional MOT.
+* Trajectories differ in their difficulty. With increasing distance of targets from their center, the tracking becomes more difficult in low detectability condition.
+
+# Acknowledgment
+
+This research was supported by Czech Science Foundation GA19-07690S and RVO 68081740.
+
+
+# References
+
+```{r, include=FALSE}
+knitr::write_bib(c('knitr','rmarkdown','posterdown','pagedown'), 'packages.bib')
+```
+

@@ -1,0 +1,25 @@
+13.4122 	WARNING 	User requested fullscreen with size [3360 2100], but screen is actually [1680, 1050]. Using actual size
+19.5105 	DATA 	Keypress: space
+20.3907 	DATA 	Keypress: space
+28.0274 	WARNING 	t of last frame was 21.98ms (=1/45)
+28.5214 	WARNING 	t of last frame was 32.22ms (=1/31)
+28.5775 	WARNING 	t of last frame was 23.12ms (=1/43)
+56.8283 	DATA 	Mouse: Left button down, pos=(1233,878)
+57.5575 	ERROR 	trialnum=0 ERROR,20 frames were longer than 20.06 ms apparently screen refreshes skipped, interframe durs were:[51.8 51.8 51.8 51.9 51.9 51.9 51.9 51.9 51.9 52.  52.  52.  52.  52.
+ 52.  52.1 52.1 52.1 52.1 52.1] and was these frames: [ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19]
+57.5645 	DATA 	Mouse:  Left button up, pos=(1233,878)
+73.6280 	DATA 	Mouse: Left button down, pos=(1042,895)
+74.6991 	ERROR 	trialnum=1 ERROR,20 frames were longer than 20.06 ms apparently screen refreshes skipped, interframe durs were:[73.3 73.3 73.4 73.4 73.4 73.4 73.4 73.4 73.5 73.5 73.5 73.5 73.5 73.5
+ 73.6 73.6 73.6 73.6 73.6 73.6] and was these frames: [ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19]
+74.7037 	DATA 	Mouse:  Left button up, pos=(1042,895)
+90.7774 	DATA 	Mouse: Left button down, pos=(1335,277)
+92.2085 	ERROR 	trialnum=2 ERROR,20 frames were longer than 20.06 ms apparently screen refreshes skipped, interframe durs were:[90.5 90.5 90.5 90.5 90.5 90.6 90.6 90.6 90.6 90.6 90.6 90.7 90.7 90.7
+ 90.7 90.7 90.7 90.8 90.8 90.8] and was these frames: [ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19]
+92.2146 	DATA 	Mouse:  Left button up, pos=(1335,277)
+105.2306 	DATA 	Mouse: Left button down, pos=(655,157)
+105.3124 	DATA 	Mouse:  Left button up, pos=(655,157)
+108.0624 	DATA 	Mouse: Left button down, pos=(658,168)
+108.1781 	DATA 	Mouse:  Left button up, pos=(658,168)
+109.8462 	DATA 	Mouse: Left button down, pos=(1190,816)
+111.7253 	ERROR 	trialnum=3 ERROR,20 frames were longer than 20.06 ms apparently screen refreshes skipped, interframe durs were:[109.5 109.6 109.6 109.6 109.6 109.6 109.6 109.7 109.7 109.7 109.7 109.7
+ 109.7 109.8 109.8 109.8 109.8 109.8 109.8 109.9] and was these frames: [ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19]

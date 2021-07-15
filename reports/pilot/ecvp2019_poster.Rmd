@@ -1,0 +1,215 @@
+---
+title: "Analysis - pilot for ECVP"
+author: "Filip Dechterenko"
+date: "28 března 2019"
+output: 
+  posterdown::posterdown_betterport
+    title: Multiple Object Tracking in noise background
+    author: 
+      - name          : "Filip Děchtěrenko"
+        affil         : "1"
+        main          : true
+        twitter       : FDechterenko
+      - name          : "Jiří Lukavský"
+        affiliation   : "1"
+
+    affiliation:
+      - num           : "1"
+        institution   : "Charles University"
+  
+---
+
+# Analysis for poster for ECVP 2019
+
+We had 160 trials (4 conditions, 40 trials per condition). We had four contrast levels (0.10,0.16,0.21,0.25) which were selected based on prior results on FD in detection experiment (they correspond to Filip's foveal d'=4,8,12,16)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load data and libraries}
+library(tidyverse)
+library(here)
+
+data_pth <- here("data","cleandata")
+df_all <- readRDS(file.path(data_pth, "df_all_190328.rds"))
+
+df_all %>% select(participant) %>% distinct() %>% nrow()
+```
+
+We have measured `r df_all %>% select(participant) %>% distinct() %>% nrow()` subjects (including FD), some of the measurements were not complete (`r df_all %>% filter(participant > 15) %>% pull(participant) %>% unique() %>% length()`), as there were memory error in psychopy (I logged too much of information).
+
+## Compute number of correct responses
+
+```{r}
+answ <- df_all$mouse.clicked_name %>% 
+  str_remove("\\[") %>% 
+  str_remove("\\]") %>% 
+  str_remove_all("'") %>% 
+  str_remove_all(" ") %>% 
+  str_remove_all("o1_copy_") %>% 
+  str_split(",", simplify = T)
+corr_trials <- answ[,5]==""
+df_all$nCorrect <- matrix(data = answ %in% c("0","1","2","3"), ncol = 5) %>% rowSums()
+df_all$nCorrect[!corr_trials] <- NA
+```
+
+The targets in psychopy are coded with indexes 0-3. Sometimes, participant could select 5 targets (if he selected three targets and clicked in between two targets). Luckily, this happen only in a few trials, so I discarded them (<1%)
+
+## Descriptive statistics
+
+```{r}
+df_all %>% group_by(t_contr) %>% summarize(m = mean(nCorrect, na.rm = T), sd = sd(nCorrect, na.rm = T)) %>% knitr::kable(digits = 2, caption = "Mean and SD for each contrast level")
+```
+
+## Plots
+
+```{r plots ncorrect}
+df_all %>% ggplot(aes(x = t_contr, y = nCorrect)) + stat_summary(fun.data = "mean_cl_boot") + ylim(0,4) + ggtitle("Number of correctly selected targets")
+
+df_all %>% ggplot(aes(x = t_contr, y = nCorrect)) + stat_summary(fun.data = "mean_cl_boot") + ylim(0,4) + facet_grid(~participant) + ggtitle("Per each subject")
+
+df_all %>% filter(participant > 15) %>% ggplot(aes(x = t_contr, y = nCorrect)) + stat_summary(fun.data = "mean_cl_boot") + ylim(0,4) + ggtitle("Only complete data (10 subjects)")
+
+df_all %>% group_by(participant,t_contr) %>% summarize(nCorrect = mean(nCorrect, na.rm = T)) %>% 
+  ggplot(aes(x = t_contr, y = nCorrect)) + stat_summary(fun.data = "mean_cl_boot") + ylim(0,4) + ggtitle("First aggregate accuracy per subject and contrast level")
+
+
+```
+
+# Same trials
+
+```{r}
+df_complete <- df_all %>% filter(participant > 15)
+
+xtabs(~trajectory_id+t_contr, df_complete)
+df_complete %>% select(participant, nCorrect, trajectory_id,t_contr) %>% spread(t_contr,nCorrect) %>% rename(contr1 = `1`, contr2 = `2`, contr3 = `3`, contr4 = `4`) %>% select(contr1:contr4) %>% cor(use = "complete.obs") %>% knitr::kable(digits = 2, caption = "Correlation between accuracy for individual contrast levels")
+```
+
+## Highest accuracy
+
+This could help us detect the patterns in object movement
+
+```{r}
+df_complete %>% group_by(trajectory_id, t_contr) %>% summarize(nCorrect = mean(nCorrect, na.rm = T)) %>% 
+  ggplot(aes(x = t_contr, y = nCorrect)) + geom_path(alpha = 0.15) + 
+  stat_summary(fun.data = "mean_cl_boot")
+df_complete %>% group_by(trajectory_id, t_contr) %>% summarize(mean_ncorrect = mean(nCorrect, na.rm = T)) %>% arrange(-mean_ncorrect) %>% head(10) %>% knitr::kable(caption = "Highest accuracy for different trajectories splitted by contrast level")
+
+df_complete %>% group_by(trajectory_id) %>% summarize(mean_ncorrect = mean(nCorrect, na.rm = T)) %>% arrange(-mean_ncorrect) %>% head(10) %>% knitr::kable(caption = "Highest accuracy for different trajectories")
+
+df_complete %>% group_by(trajectory_id) %>% summarize(mean_ncorrect = mean(nCorrect, na.rm = T)) %>% arrange(-mean_ncorrect) %>% tail(10) %>% knitr::kable(caption = "Highest accuracy for different trajectories")
+
+
+df_traj1 <- df_trajectories %>% reshape_trajectories()
+df_traj2 <- df_traj1 %>% group_by(trajectory_id) %>% do(describe_trajectory(.))
+
+df_traj_stat <- df_complete %>% group_by(trajectory_id,t_contr) %>% summarize(nCorrect = mean(nCorrect, na.rm = T)) %>% left_join(df_traj2, by = "trajectory_id") %>% 
+  mutate(target = if_else(target, "target", "distractor"))
+
+p_chull <- df_traj_stat %>% ggplot(aes(x = chull_mean, y = nCorrect)) + geom_point() + geom_smooth(method = "lm")+ facet_grid(target~t_contr)
+p_tgtmean <- df_traj_stat %>% ggplot(aes(x = dist_from_tgt_center_mean, y = nCorrect)) + geom_point() + geom_smooth(method = "lm")+ facet_grid(target~t_contr)
+
+df_traj_stat %>% ggplot(aes(x = chull_sd, y = nCorrect)) + geom_point() + geom_smooth(method = "lm")+ facet_grid(target~t_contr)
+df_traj_stat %>% ggplot(aes(x = dist_from_tgt_center_sd, y = nCorrect)) + geom_point() + geom_smooth(method = "lm")+ facet_grid(target~t_contr)
+df_traj_stat %>% ggplot(aes(x = dist_from_tgt_center_max, y = nCorrect)) + geom_point() + geom_smooth(method = "lm") + facet_grid(target~t_contr)
+
+df_traj_stat %>% group_by(trajectory_id,chull_mean) %>% summarize(nCorrect = mean(nCorrect)) %>% ggplot(aes(x = chull_mean, y = nCorrect)) + geom_point() + geom_smooth(method = "lm")
+df_traj_stat %>% group_by(trajectory_id,chull_sd) %>% summarize(nCorrect = mean(nCorrect)) %>% ggplot(aes(x = chull_sd, y = nCorrect)) + geom_point() + geom_smooth(method = "lm")
+df_traj_stat %>% group_by(trajectory_id,dist_from_tgt_center_mean) %>% summarize(nCorrect = mean(nCorrect)) %>% ggplot(aes(x = dist_from_tgt_center_mean, y = nCorrect)) + geom_point() + geom_smooth(method = "lm")
+df_traj_stat %>% group_by(trajectory_id,dist_from_tgt_center_sd) %>% summarize(nCorrect = mean(nCorrect)) %>% ggplot(aes(x = dist_from_tgt_center_sd, y = nCorrect)) + geom_point() + geom_smooth(method = "lm")
+df_traj_stat %>% group_by(trajectory_id,dist_from_tgt_center_max) %>% summarize(nCorrect = mean(nCorrect)) %>% ggplot(aes(x = dist_from_tgt_center_max, y = nCorrect)) + geom_point() + geom_smooth(method = "lm")
+
+```
+
+## test
+
+```{r}
+lm(nCorrect~chull_sd*t_contr*target, df_traj_stat) %>% car::Anova()
+lm(nCorrect~dist_from_tgt_center_mean*t_contr*target, df_traj_stat) %>% car::Anova()
+lm(nCorrect~chull_mean*t_contr*target, df_traj_stat) %>% car::Anova()
+```
+
+## Describe trajectory
+
+
+
+## Visualize
+
+Per each trajectory
+
+```{r}
+df_complete %>% ggplot(aes(x = t_contr, y = nCorrect)) + stat_summary(fun.data="mean_cl_boot") + ylim(0,4) + facet_grid(~trajectory_id)
+
+```
+
+## Number of clicks
+
+```{r}
+df_withmouse <- readRDS(file.path(data_pth, "df_withmouse_190328.rds"))
+
+answ <- df_withmouse$mouse.clicked_name %>% 
+  str_remove("\\[") %>% 
+  str_remove("\\]") %>% 
+  str_remove_all("'") %>% 
+  str_remove_all(" ") %>% 
+  str_remove_all("o1_copy_") %>% 
+  str_split(",", simplify = T)
+corr_trials <- answ[,5]==""
+
+df_withmouse$nCorrect <- matrix(data = answ %in% c("0","1","2","3"), ncol = 5) %>% rowSums()
+df_withmouse$nCorrect[!corr_trials] <- NA
+
+df_trajectories <- readRDS(file.path(data_pth, "trajectories_190328.rds"))
+#df_trajends <- df_withmouse %>% select(trajectory_id,start_time,) %>% mutate(end_time = start_time + 6)
+#df_trajectories %>% left_join(df_trajends) %>% filter(t == end_time)
+
+mouse_xall <- df_withmouse$mouse_xall %>% 
+  str_remove("\\[") %>% 
+  str_remove("\\]") %>% 
+  str_remove_all("'") %>% 
+  str_remove_all(" ") %>% 
+  str_split(",", simplify = T)
+
+mouse_xall <- matrix(as.numeric(mouse_xall), ncol = ncol(mouse_xall))
+
+mouse_yall <- df_withmouse$mouse_yall %>% 
+  str_remove("\\[") %>% 
+  str_remove("\\]") %>% 
+  str_remove_all("'") %>% 
+  str_remove_all(" ") %>% 
+  str_split(",", simplify = T)
+
+mouse_yall <- matrix(as.numeric(mouse_yall), ncol = ncol(mouse_yall))
+
+nclicks <- rowSums(!is.na(mouse_xall))
+df_withmouse$nClicks <- nclicks
+
+```
+
+## Visualize number of clicks
+```{r}
+df_withmouse %>% group_by(t_contr) %>% summarize(m = mean(nClicks, na.rm = T), sd = sd(nClicks, na.rm = T)) %>% knitr::kable(digits = 2, caption = "Number of clicks per contrast level")
+df_withmouse %>% ggplot(aes(x = t_contr, y = nClicks)) + stat_summary(fun.data = "mean_cl_boot")
+```
+
+## Average distance
+
+Not very informative as it computes it for all targets
+
+```{r}
+mouse_x_mean <- apply(mouse_xall, 1, mean, na.rm = T)
+mouse_y_mean <- apply(mouse_yall, 1, mean, na.rm = T)
+
+distM <- matrix(NA, ncol = ncol(mouse_xall), nrow = nrow(mouse_xall))
+
+for (i in 1:length(mouse_x_mean)) {
+  distM[i,] <-  sqrt((mouse_xall[i,] - mouse_x_mean[i])^2+(mouse_yall[i,] - mouse_y_mean[i])^2)
+}
+
+df_withmouse$mouse_dist_mean <- apply(distM, 1, mean, na.rm = T)
+df_withmouse$mouse_dist_sd <- apply(distM, 1, sd, na.rm = T)
+
+df_withmouse %>% ggplot(aes(x = t_contr, y = mouse_dist_mean)) + stat_summary(fun.data = "mean_cl_boot")
+df_withmouse %>% ggplot(aes(x = t_contr, y = mouse_dist_sd)) + stat_summary(fun.data = "mean_cl_boot")
+```

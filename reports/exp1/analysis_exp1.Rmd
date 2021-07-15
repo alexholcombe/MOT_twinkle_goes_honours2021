@@ -1,0 +1,181 @@
+---
+title: "Analysis - exp1"
+author: "Filip Děchtěrenko"
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+
+# Preparation
+
+## Load data and libraries
+
+We are loading data from the experiment
+
+```{r load data and libraries, warning = F, message = F}
+set.seed(191124)
+library(tidyverse); theme_set(theme_classic(16))
+library(lme4)
+library(here)
+
+source(here("R","utils.R"))
+
+plots_dir <- here("plots", "exp1")
+
+if(!dir.exists(plots_dir)) {
+  dir.create(plots_dir)
+}
+
+df <- read_rds(here::here("data", "exp1", "data_191129.rds"))
+
+df_participants <- readxl::read_excel(here("data","exp1","participant_exp1_complete.xlsx"))
+
+```
+
+## Filter participants with low accuaracy
+
+```{r filter low accuracy in normal MOT}
+df_bad <- df %>% filter(t_contr == "MOT") %>% group_by(subject_id) %>% summarize(m = mean(acc)) %>% filter(m <0.75)
+```
+
+Luckily, we did not need to filter anyone
+
+## Descriptive statistics
+
+```{r simple desc stat}
+df_participants %>% summarize(n = n())
+df %>% group_by(t_contr) %>% summarize(m = mean(acc), sd = sd(acc))
+df %>% group_by(t_contr,mark_type) %>% summarize(m = mean(acc), sd = sd(acc))
+```
+
+## Visualize
+
+```{visualize results}
+
+p <- df %>% 
+  group_by(subject_id, t_contr,mark_type) %>% 
+  filter(t_contr == "MOT") %>% 
+  summarize(nCorrect = mean(nCorrect, na.rm = T)) %>% 
+  ggplot(aes(x = t_contr, y = nCorrect,col = mark_type)) + 
+  stat_summary(fun.data="mean_cl_boot") + 
+  theme(aspect.ratio = 1) + 
+  ylim(0,4) + 
+  ggtitle("Number of correctly selected targets") + 
+  xlab("contrast level") + 
+  ylab("# targets")
+p
+ggsave(file.path(plots_dir, sprintf("exp1_results_noleg.svg")), plot = p + theme(legend.position = "none"),width = 6, height = 6)
+ggsave(file.path(plots_dir, sprintf("exp1_results.svg")), plot = p,width = 6, height = 6)
+
+```
+
+## Test
+
+```{test lmer}
+lm1    <- glmer(acc~t_contr+(1|subject_id), data = df %>% filter(t_contr != "MOT"), family= "binomial")
+lm1null <- glmer(acc~1+(1|subject_id), data = df %>% filter(t_contr != "MOT"), family= "binomial")
+anova(lm1, lm1null)
+```
+
+```{test lmer mark}
+df_noise <- df %>% filter(t_contr != "MOT")
+
+lm2_full    <- glmer(acc~t_contr*mark_type+(1|subject_id)+(1|trajectory_id), data = df_noise, family= "quasibinomial")
+lm2_noint    <- glmer(acc~t_contr+mark_type+(1|subject_id)+(1|trajectory_id), data = df_noise, family= "binomial")
+
+lm2_noint_REML    <- glmer(acc~t_contr+mark_type+(1|subject_id)+(1|trajectory_id), data = df_noise, family= "binomial", REML = T)
+lm2_noint_notraj_id    <- glmer(acc~t_contr+mark_type+(1|subject_id), data = df_noise, family= "binomial", REML = T)
+lm2_noint_nosubj_id    <- glmer(acc~t_contr+mark_type+(1|trajectory_id), data = df_noise, family= "binomial", REML = T)
+
+lm2_justmark    <- glmer(acc~mark_type+(1|subject_id)+(1|trajectory_id), data = df_noise, family= "binomial")
+lm2_justcontr    <- glmer(acc~t_contr+(1|subject_id)+(1|trajectory_id), data = df_noise, family= "binomial")
+
+
+lm2_null <- glmer(acc~1+(1|subject_id)+(1|trajectory_id), data = df %>% filter(t_contr != "MOT"), family= "binomial")
+anova(lm2_noint_notraj_id, lm2_noint_REML)
+anova(lm2_noint_nosubj_id, lm2_noint_REML)
+
+anova(lm2_full, lm2_noint)
+anova(lm2_null, lm2_justmark)
+anova(lm2_null, lm2_justcontr)
+anova(lm2_noint, lm2_justcontr)
+anova(lm2_noint, lm2_justmark)
+```
+
+### Compute effect size per each individual contrast level
+
+We are averaging data per each subject, contrast level and mark type. This inflates the CI, but the estimate should be correct.
+
+```{r effect size per contrast}
+df1 <- df %>% 
+  filter(t_contr != "MOT") %>% 
+  group_by(t_contr,subject_id,mark_type) %>% 
+  summarize(nCorrect = mean(nCorrect)) %>% 
+  group_by(t_contr) %>% 
+  do(dc = effsize::cohen.d(nCorrect~mark_type,.,paired=T)$estimate,
+     dc_CI = effsize::cohen.d(nCorrect~mark_type,.,paired=T)$conf.int,
+     c = cor(.$nCorrect[.$mark_type == "mark"],.$nCorrect[.$mark_type == "noMark"]),
+     tt = t.test(nCorrect~mark_type, ., paired = T)) 
+
+df1 %>% 
+  mutate(d = unlist(dc), d_low = unlist(dc_CI)[1], d_high = unlist(dc_CI)[2], c = unlist(c),
+         tt)
+
+```
+
+```{r effect size between contrasts}
+df_13 <- df %>% 
+  filter(t_contr %in% c("1","3")) %>% 
+  group_by(t_contr,subject_id) %>% 
+  summarize(nCorrect = mean(nCorrect)) %>% 
+  ungroup() %>% 
+  do(dc = effsize::cohen.d(nCorrect~t_contr,.,paired=T)$estimate %>% unlist(),
+     dc_CI = effsize::cohen.d(nCorrect~t_contr,.,paired=T)$conf.int,
+     c = cor(.$nCorrect[.$t_contr == "1"],.$nCorrect[.$t_contr == "3"]),
+     tt = t.test(nCorrect~t_contr, ., paired = T)) 
+df_13 %>% 
+  mutate(d = unlist(dc), d_low = unlist(dc_CI)[1], d_high = unlist(dc_CI)[2], c = unlist(c),
+         tt)
+
+```
+
+## Difference between MOT and high contrast noise mot
+
+Pretty obvious, but it is in preregistration.
+
+```{r normal mot - noise mot difference}
+df %>% 
+  filter(t_contr %in% c("3","MOT")) %>% 
+  group_by(subject_id,t_contr) %>% 
+  summarize(nCorrect = mean(nCorrect)) %>% 
+  t.test(nCorrect~t_contr,., var.equal = T)
+
+rbind(df %>% 
+  filter(t_contr %in% c("3","MOT")) %>% 
+  group_by(subject_id,t_contr) %>% 
+  summarize(nCorrect = mean(nCorrect)) %>% 
+  spread(t_contr,nCorrect) %>% 
+  cor.test(~`3`+MOT,.) %>% broom::tidy(),
+
+df %>% 
+  filter(t_contr %in% c("2","MOT")) %>% 
+  group_by(subject_id,t_contr) %>% 
+  summarize(nCorrect = mean(nCorrect)) %>% 
+  spread(t_contr,nCorrect) %>% 
+  cor.test(~`2`+MOT,.)%>% broom::tidy(),
+
+df %>% 
+  filter(t_contr %in% c("1","MOT")) %>% 
+  group_by(subject_id,t_contr) %>% 
+  summarize(nCorrect = mean(nCorrect)) %>% 
+  spread(t_contr,nCorrect) %>% 
+  cor.test(~`1`+MOT,.)%>% broom::tidy()) %>% 
+  pull(estimate) %>% range() %>% round(2)
+```
+
+## Differences in trajectories
+
+
