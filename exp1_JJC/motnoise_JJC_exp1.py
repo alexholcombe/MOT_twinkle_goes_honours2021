@@ -11,7 +11,7 @@ from psychopy import prefs
 from psychopy import sound, gui, visual, core, data, event, logging, clock, colors
 from psychopy import event
 from psychopy.constants import (NOT_STARTED, STARTED, PLAYING, PAUSED,
-                                STOPPED, FINISHED, PRESSED, RELEASED, FOREVER)
+                            STOPPED, FINISHED, PRESSED, RELEASED, FOREVER)
 import numpy as np  # whole numpy lib is available, prepend 'np.'
 import pylab #for some frametimes plotting
 from numpy import (sin, cos, tan, log, log10, pi, average,
@@ -738,6 +738,9 @@ for thisPractice_trial in practice_trials:
             thisComponent.status = NOT_STARTED
     P.objects[0].finalx0 = -999 #this is just for recording the final position to the data file
     P.objects[0].finaly0 = -999
+    P.objects[0].penultimatex0 = -999 #this is just for recording the penultimate position to the data file
+    P.objects[0].penultimatey0 = -999 #this is just for recording the penultimate position to the data file
+
     # reset timers
     t = 0
     _timeToFirstFrame = win.getFutureFlipTime(clock="now")
@@ -828,6 +831,11 @@ for thisPractice_trial in practice_trials:
                 #Record the time of the very last frame that the stimuli are still on, by doing it over and over, so when the code ceases it will be correct.
                 P.objects[0].tLastFrame = -999 #dummy value which will hopefully get overwritten on win flip by the next line, over and over until the very last frame
                 win.timeOnFlip(P.objects[0], 'tLastFrame')  # set P.objects[0].tLastFrame to time at next scr refresh
+                
+                #To record the penultimate position to the data file, on each pass-through, set it to final before setting final to current, so that
+                #at the last frame, final will be final
+                P.objects[0].penultimatex0 = P.objects[0].finalx0 #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
+                P.objects[0].penultimatey0 = P.objects[0].finaly0 #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
                 #Record last x,y of object 0
                 P.objects[0].finalx0 = P.objects[0].pos[0] #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
                 P.objects[0].finaly0 = P.objects[0].pos[1]
@@ -972,6 +980,8 @@ for thisPractice_trial in practice_trials:
         print('P.objects[0].tStartRefresh - globalClockAheadBy = ',P.objects[0].tStartRefresh - globalClockAheadBy)
     practice_trials.addData('P.objects[0].started', P.objects[0].tStartRefresh - globalClockAheadBy)
     practice_trials.addData('P.objects[0].tLastFrame', P.objects[0].tLastFrame - globalClockAheadBy)
+    practice_trials.addData('P.objects[0].penultimatex0',P.objects[0].penultimatex0)
+    practice_trials.addData('P.objects[0].penultimatey0',P.objects[0].penultimatey0)
     practice_trials.addData('P.objects[0].finalx0',P.objects[0].finalx0)
     practice_trials.addData('P.objects[0].finaly0',P.objects[0].finaly0)
     

@@ -128,6 +128,9 @@ dh %>% filter( anyHiccupsLastFrames > 0)  %>%
        summarise( trialsWithHiccupsLastFrames=  n(), avgMissedFramesInWholeTrial = mean(win.nDroppedFrames) )
 #Finished timing checks
 
+#Remove trials with timingHiccupsInLastFramesOfStimuli
+dh <- dh %>% filter(timingHiccupsInLastFramesOfStimuli > 0)
+
 #Calculate distance between mouse.click and target
 dh <- dh %>% mutate(xErr = obj0finalX - mouse.x,
               yErr = obj0finalY - mouse.y)
