@@ -1574,8 +1574,6 @@ while continueRoutine and routineTimer.getTime() > 0:
 for thisComponent in byeComponents:
     if hasattr(thisComponent, "setAutoDraw"):
         thisComponent.setAutoDraw(False)
-thisExp.addData('text_4.started', text_4.tStartRefresh)
-thisExp.addData('text_4.stopped', text_4.tStopRefresh)
 
 # Flip one final time so any remaining win.callOnFlip() 
 # and win.timeOnFlip() tasks get executed before quitting

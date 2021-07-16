@@ -5,10 +5,10 @@ library(here)
 
 source(here("utils.R"))
 
-local_data_pth <- file.path(here("..","exp1"), "data")
+local_data_pth <- file.path(here("..","exp1_JJC"), "data")
 #dir(local_data_pth)
 
-outpth <- here("exp1")
+outpth <- here("exp1_JJC")
 
 files <- dir(local_data_pth, pattern = "*.csv") # get file names
 files <- tibble(fname=files)
@@ -21,8 +21,8 @@ if (testWithTwoFiles) {
 }
 
 if (testWithTwoFiles) {
-  files <- files %>% filter(fname=="999_noiseMot_exp1_noise_2021_Jul_15_1231.csv" | 
-                          fname=="999_noiseMot_exp1_noise_2021_Jul_14_1523.csv")
+  files <- files %>% filter(fname=="999_noiseMot_exp1_noise_2021_Jul_15_1439.csv" | 
+                          fname=="999_noiseMot_exp1_noise_2021_Jul_16_0935_1.csv")
 }
 fnames <- as.array(files$fname)
 msg<- paste0("Number of files = ",as.character(nrow(fnames)), ".")
@@ -95,30 +95,35 @@ table(df$participant,df$date)
 
 #Eliminate all but the important columns and rename a few
 dg <-df %>% 
-  select(subject_id = participant, 
-         protocol_id = prot_id,
-         trial_id = trial_id,
-         noise_id, trajectory_id, t_contr, mark_type,
-         mouse_x = mouse.x,mouse_y = mouse.y, 
-         mouse.clicked_name,
-         rt = mouse.time) 
-#mouse.clicked_name is a list of which objects were clicked with the mouse.
-#Turn it into separate fields, with one row for each trial
-answ <- dg$mouse.clicked_name %>% 
-  str_remove("\\[") %>% 
-  str_remove("\\]") %>% 
-  str_remove_all("'") %>% 
-  str_remove_all(" ") %>% 
-  str_remove_all("o1_copy_") %>% 
-  str_split(",", simplify = T)
+  select(participant, 
+         protocol = prot_id,
+         trial = trial_id,
+         trajectory_id,
+         practice_trials.thisN,
+         trials.thisN,
+         mouse.x.firstBadClick, mouse.y.firstBadClick,
+         mouse.x, mouse.y,
+         obj0finalX = P.objects[0].finalx0, 
+         obj1finalY = P.objects[0].finaly0,
+         timingHiccupsInLastFramesOfStimuli,
+         win.nDroppedFrames,
+         RT = mouse.time) 
 
-#The targets are always object numbers 0, 1, 2, 3, so check how many of them the participant clicked on.
-dg$nCorrect <- matrix(data = answ %in% c("0","1","2","3"), ncol = 4) %>% rowSums()
-dg$acc <- dg$nCorrect/4
-dg$mark_type[dg$t_contr == "MOT"] <- "noMark"
+#Investigate the breakdown of practice and real trials
+print("Here is a table of participant number versus protocol (1 = real trials):")
+table(dg$participant,dg$protocol) #Because prot_id = 0 means practice trials, 1=real trials
 
 #delete the practice trials
-dg <- dg %>% filter(protocol_id!=0) 
+dh <- dg %>% filter(protocol !=0) 
+
+#Check number of timing hiccups
+print("Here is a table of participant number versus timing hiccups in last frames per trial:")
+table(dh$participant,dh$timingHiccupsInLastFramesOfStimuli) 
+
+
+#Calculate distance between mouse.click and target
+dh %>% mutate(xErr = obj0finalX - mouse.x,
+              yErr = obj0finalY - mouse.y)
 
 write_rds(dg, here("exp1","data_processed",outputFname))
 
