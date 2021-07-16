@@ -21,8 +21,8 @@ import os  # handy system and path functions
 import sys  # to get file system encoding
 
 from psychopy.hardware import keyboard
-debug=True #Print more information to console
-autopilot=True
+debug=False #Print more information to console
+autopilot=False
 demo=False
 
 # Ensure that relative paths start from the same directory as this script
@@ -484,7 +484,7 @@ for thisComponent in intro_blockComponents:
 routineTimer.reset()
 
 # set up handler to look after randomisation of conditions etc
-practice_trials = data.TrialHandler(nReps=1, method='sequential', 
+practice_trials = data.TrialHandler(nReps=0, method='sequential', 
 #practice_trials = data.TrialHandler(nReps=1, method='sequential', LJM
     extraInfo=expInfo, originPath=-1,
     trialList=data.importConditions('protocols/P_practice.csv'),
@@ -1011,10 +1011,7 @@ while continueRoutine:
         win.callOnFlip(key_resp_2.clock.reset)  # t=0 on next screen flip
         win.callOnFlip(key_resp_2.clearEvents, eventType='keyboard')  # clear events on next screen flip
     if key_resp_2.status == STARTED and not waitOnFlip:
-        if not autopilot:
-            theseKeys = key_resp_2.getKeys(keyList=['space'], waitRelease=False)
-        else:  #autopilot
-            theseKeys = ['space']
+        theseKeys = key_resp_2.getKeys(keyList=['space'], waitRelease=False)
         _key_resp_2_allKeys.extend(theseKeys)
         if len(_key_resp_2_allKeys):
             key_resp_2.keys = _key_resp_2_allKeys[-1].name  # just the last key pressed
@@ -1066,6 +1063,27 @@ for thisTrial in trials:
     if thisTrial != None:
         for paramName in thisTrial:
             exec('{} = thisTrial[paramName]'.format(paramName))
+    pctTrialsCompletedForBreak = np.array([.6,.8])  
+    breakTrials = np.round(trials.nTotal*pctTrialsCompletedForBreak)
+    timeForTrialsRemainingMsg = np.any(trials.thisN==breakTrials)
+    if timeForTrialsRemainingMsg :
+        pctDone = round(    (1.0*trials.thisN) / (1.0*trials.nTotal)*100,  0  )
+        nextText.setText('Press "SPACE" to continue!')
+        nextText.draw()
+        progressMsg = 'Completed ' + str(trials.thisN) + ' of ' + str(trials.nTotal) + ' trials'  #EVA if this doesn't work, change it to progressMsg = ' '
+        NextRemindCountText.setText(progressMsg)
+        NextRemindCountText.draw()
+        myWin.flip() # myWin.flip(clearBuffer=True) 
+        waiting=True
+        while waiting:
+            if autopilot: break
+            elif expStop == True:break
+            for key in event.getKeys():      #check if pressed abort-type key
+                if key in ['space','ESCAPE']: 
+                    waiting=False
+                if key in ['ESCAPE']:
+                    expStop = False
+        myWin.clearBuffer()
     
     # ------Prepare to start Routine "fix"-------
     continueRoutine = True
@@ -1253,7 +1271,7 @@ for thisTrial in trials:
     gotValidClick = False  # until a click is received
     mouse.mouseClock.reset()
     # keep track of which components have finished
-    trialComponents = [o1, mouse, cue, noise]
+    trialComponents = [P.objects[0], mouse, cue, noise]
     for thisComponent in trialComponents:
         thisComponent.tStart = None
         thisComponent.tStop = None
@@ -1347,13 +1365,13 @@ for thisTrial in trials:
             if mouse_reset == False :
               mouse.setPos((0,0))
             mouse_reset = True
-            if noise_present == 'noise' :
-                if noise.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
-                    noise.frameNStart = frameN  # exact frame index
-                    noise.tStart = t  # local t and not account for scr refresh
-                    noise.tStartRefresh = tThisFlipGlobal  # on global time
-                    win.timeOnFlip(noise, 'tStartRefresh')  # time at next scr refresh
-                    noise.status = STARTED
+            #if noise_present == 'noise' :
+            if noise.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
+                noise.frameNStart = frameN  # exact frame index
+                noise.tStart = t  # local t and not account for scr refresh
+                noise.tStartRefresh = tThisFlipGlobal  # on global time
+                win.timeOnFlip(noise, 'tStartRefresh')  # time at next scr refresh
+                noise.status = STARTED
             if noise.status == STARTED:
                 if noise._needBuild:
                     noise.buildNoise()
@@ -1367,21 +1385,20 @@ for thisTrial in trials:
                 mouseHighlight.setPos([xToHighlightMousePos, yToHighlightMousePos])
                 mouseHighlight.draw( )
               
-                if mouse.isPressedIn(cue, buttons=[0]) or autopilot:
+                if any( mouse.getPressed() ) or autopilot:
                     x, y = mouse.getPos()
                     nClicks = nClicks + 1
+                    #add information about the clicked location
                     mouse_x_correct.append(x)
                     mouse_y_correct.append(y)
                     mouse_time_correct.append(trialClock.getTime()) #substitute times[0] here as the measure of RT, if choose to stop using trialClock AOH
                 elif any( mouse.getPressed() ) and neverClicked: #Catch if clicked in the wrong quadrant and record that for possible discarding this trial later
                     neverClicked=False
                     xFirstBadClick, yFirstBadClick = mouse.getPos()
-
             else: # all foiur targets were clicked, ending routine
                 win.mouseVisible = False
                 continueRoutine = False
                 for i2 in range(n_objects):
-                    P.objects[i2].mmark.setAutoDraw(False)
                     P.objects[i2].setAutoDraw(False)
                 #noise_backg.setAutoDraw(False)
                 time.sleep(0.3) 

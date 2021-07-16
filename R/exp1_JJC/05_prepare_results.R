@@ -103,8 +103,8 @@ dg <-df %>%
          trials.thisN,
          mouse.x.firstBadClick, mouse.y.firstBadClick,
          mouse.x, mouse.y,
-         obj0finalX = P.objects[0].finalx0, 
-         obj1finalY = P.objects[0].finaly0,
+         obj0finalX = `P.objects[0].finalx0`, 
+         obj0finalY = `P.objects[0].finaly0`,
          timingHiccupsInLastFramesOfStimuli,
          win.nDroppedFrames,
          RT = mouse.time) 
@@ -117,13 +117,25 @@ table(dg$participant,dg$protocol) #Because prot_id = 0 means practice trials, 1=
 dh <- dg %>% filter(protocol !=0) 
 
 #Check number of timing hiccups
-print("Here is a table of participant number versus timing hiccups in last frames per trial:")
+print("Here is a table of participant number versus num timing hiccups in last frames of trials:")
 table(dh$participant,dh$timingHiccupsInLastFramesOfStimuli) 
 
+dh <- dh %>% mutate(anyHiccupsLastFrames = timingHiccupsInLastFramesOfStimuli > 0)
+
+print("For each participant num trials with hiccups in last frames, and avg missed frames in whole trial for those trials:")
+dh %>% filter( anyHiccupsLastFrames > 0)  %>% 
+       group_by(participant)  %>%
+       summarise( trialsWithHiccupsLastFrames=  n(), avgMissedFramesInWholeTrial = mean(win.nDroppedFrames) )
+#Finished timing checks
 
 #Calculate distance between mouse.click and target
-dh %>% mutate(xErr = obj0finalX - mouse.x,
+dh <- dh %>% mutate(xErr = obj0finalX - mouse.x,
               yErr = obj0finalY - mouse.y)
+
+#Plot error data
+ggplot(dh, aes(xErr,yErr)) + geom_point()
+
+#Calculate various distance metrics
 
 write_rds(dg, here("exp1","data_processed",outputFname))
 
