@@ -32,11 +32,11 @@ msg<- paste0("Number of files = ",as.character(nrow(fnames)), ".")
 print(msg)
 
 #Try reading an individual file
-try_reading_one_file <- T
-if (try_reading_one_file) {
+analyse_only_most_recent_file <- T
+if (analyse_only_most_recent_file) {
   #testfile <- "999_noiseMot_exp1_noise_2021_May_10_1219.csv"
   testfile<- files$files[1]
-  df_try <- read_csv(  file.path(local_data_pth, testfile) )
+  df <- read_csv(  file.path(local_data_pth, testfile) )
   # df_try <- read_csv(testfile,
   #                            col_types = cols(.default = col_double(),
   #                                mark_type = col_character(),
@@ -54,13 +54,14 @@ if (try_reading_one_file) {
   
   #If the last trial is not completed, then some columns such as prot_id will be "NA"
 }  
-
-# http://jenrichmond.rbind.io/post/use-map-to-read-many-csv-files/
-df<- fnames %>%                  # read each file into a tibble and combine them all
-  map_dfr(function(x) 
-           read_csv(file.path(local_data_pth, x)
-             )
-  )
+else {
+  # http://jenrichmond.rbind.io/post/use-map-to-read-many-csv-files/
+  df<- fnames %>%                  # read each file into a tibble and combine them all
+    map_dfr(function(x) 
+      read_csv(file.path(local_data_pth, x)
+      )
+    )
+}
 #Practice trials have some different columns than real trials, which explains many of the "NA"s
 
 #Be aware that if you quit the experiment early, the final trial will be almost entirely blank and filled in with "NA"
@@ -163,12 +164,25 @@ dhh <- dhh %>% mutate(dx = obj0finalX - obj0penultimateX,
 dhh<- dhh %>% mutate(finalDirection = atan2(dy,dx)/pi*180)
 dhh<- dhh %>% mutate(finalSpeed =    sqrt(dx*dx + dy*dy) / (avgDurLastFrames/1000))
   
+#final direction
+ggplot(dhh, aes(finalDirection)) + geom_histogram()
+#final speed
+ggplot(dhh, aes(finalSpeed)) + geom_histogram()
+
+#ggplot(dhh, aes(obj0finalX)) + geom_histogram()
+
 #Calculate distance between mouse.click and target
-dh <- dh %>% mutate(xErr = obj0finalX - mouse.x,
-              yErr = obj0finalY - mouse.y)
+dhh <- dhh %>% mutate(xErr = obj0finalX - mouse.x,
+                    yErr = obj0finalY - mouse.y)
+ggplot(dhh, aes(xErr,yErr)) + geom_point()
+
+#Calculate component of error relative to last direction
+#Project error vector onto direction vector
+dhh <- dhh %>% mutate(err = xErr*xErr,
+                      
+ggplot(dhh, aes(xErr)) + geom_histogram()
 
 #Plot error data
-ggplot(dh, aes(xErr,yErr)) + geom_point()
 
 #Calculate various distance metrics
 
