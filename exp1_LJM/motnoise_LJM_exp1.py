@@ -133,6 +133,10 @@ expInfo['psychopyVersion'] = psychopyVersion
 # Data file name stem = absolute path + name; later add .psyexp, .csv, .log, etc
 filename = _thisDir + os.sep + u'data/%s_%s_%s' % (expInfo['participant'], expName, expInfo['date'])
 
+if not demo and not debug:
+    saveCodeCmd = 'cp \'' + sys.argv[0] + '\' '+ filename + '.py'
+    os.system(saveCodeCmd)  #save a copy of the code as it was when that subject was run
+    
 # An ExperimentHandler isn't essential but helps with data saving
 thisExp = data.ExperimentHandler(name=expName, version='',
     extraInfo=expInfo, runtimeInfo=runInfo,

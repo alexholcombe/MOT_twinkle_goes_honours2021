@@ -17,12 +17,12 @@ import pylab #for some frametimes plotting
 from numpy import (sin, cos, tan, log, log10, pi, average,
                    sqrt, std, deg2rad, rad2deg, linspace, asarray)
 from numpy.random import random, randint, normal, shuffle, choice as randchoice
-import os  # handy system and path functions
+import os, shutil  # handy system and path functions
 import sys  # to get file system encoding
 from psychopy.hardware import keyboard
 
 debug=False #Print more information to console
-autopilot=True
+autopilot=False
 demo=False
 
 # Ensure that relative paths start from the same directory as this script
@@ -99,7 +99,7 @@ myWin.close() #have to close window to show dialog box
 # Store info about the experiment session
 from psychopy import __version__ # Get the PsychoPy version currently in use
 psychopyVersion = __version__
-expName = 'noiseMot_exp1_noise'  # from the Builder filename that created this script
+expName = 'noiseMot_exp1_noise'  
 expInfo = {'motbox_path': '../', 'participant': '999', 'protocol': '1'}
 
 myDlg = gui.DlgFromDict(dictionary=expInfo, sortKeys=False, title=expName, show=False)
@@ -130,6 +130,9 @@ expInfo['psychopyVersion'] = psychopyVersion
 
 # Data file name stem = absolute path + name; later add .psyexp, .csv, .log, etc
 filename = _thisDir + os.sep + u'data/%s_%s_%s' % (expInfo['participant'], expName, expInfo['date'])
+if not demo and not debug: #Save a copy of the code so know exactly what the code was for each participant
+    shutil.copy2(sys.argv[0], filename + '.py') #https://stackoverflow.com/questions/123198/how-can-a-file-be-copied
+    
 # An ExperimentHandler isn't essential but helps with data saving
 thisExp = data.ExperimentHandler(name=expName, version='',
     extraInfo=expInfo, runtimeInfo=runInfo,
@@ -1044,6 +1047,7 @@ for thisPractice_trial in practice_trials:
 # completed 1 repeats of 'practice_trials'
 
 #REAL TRIALS
+    
 # ------Prepare to start Routine "before_trials"-------
 continueRoutine = True
 # update component parameters for each repeat

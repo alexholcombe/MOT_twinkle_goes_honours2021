@@ -5,19 +5,19 @@ library(here)
 
 source(here("utils.R"))
 
-local_data_pth <- file.path(here("..","exp1_JJC"), "data")
-#dir(local_data_pth)
+local_data_pth <- file.path(here("..","exp1_LJM"), "data")
+dir(local_data_pth)
 
-outpth <- here("exp1_JJC")
+outpth <- here("exp1_LJM")
 
 files <- dir(local_data_pth, pattern = "*.csv") # get file names
 files <- tibble(fname=files)
 
 outputFname = "data_exp1.rds"
 
-testWithTwoFiles<-T #hand-pick two files for testing purposes
+testWithTwoFiles<- FALSE #hand-pick two files for testing purposes
 if (testWithTwoFiles) {
-  outputFname = "data_testAOH.rds"
+  outputFname = "data_test.rds"
 }
 
 if (testWithTwoFiles) {
