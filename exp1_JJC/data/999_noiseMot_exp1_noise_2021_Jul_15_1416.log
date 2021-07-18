@@ -1,8 +1,0 @@
-12.6941 	WARNING 	User requested fullscreen with size [3360 2100], but screen is actually [1680, 1050]. Using actual size
-19.1925 	DATA 	Keypress: space
-19.9341 	DATA 	Keypress: space
-283.3682 	DATA 	Keypress: y
-304.2193 	WARNING 	t of last frame was 22.11ms (=1/45)
-304.5029 	WARNING 	t of last frame was 21.97ms (=1/45)
-305.1582 	ERROR 	trialnum=1 ERROR,2 frames were longer than 19.95 ms apparently screen refreshes skipped, interframe durs were:[22.1 22. ] and was these frames: [ 2 19]
-311.9261 	DATA 	Keypress: escape

@@ -27,7 +27,7 @@ if (testWithTwoFiles) {
   files <- files %>% filter(fname=="999_noiseMot_exp1_noise_2021_Jul_15_1439.csv" | 
                               fname=="999_noiseMot_exp1_noise_2021_Jul_16_0935_1.csv")
 }
-fnames <- as.array(files$fname)
+fnames <- as.array(files$files)
 msg<- paste0("Number of files = ",as.character(nrow(fnames)), ".")
 print(msg)
 
@@ -108,6 +108,8 @@ dg <-df %>%
          mouse.x, mouse.y,
          obj0finalX = `P.objects[0].finalx0`, 
          obj0finalY = `P.objects[0].finaly0`,
+         obj0penultimateX = `P.objects[0].penultimatex0`,
+         obj0penultimateY = `P.objects[0].penultimatey0`,
          timingHiccupsInLastFramesOfStimuli,
          win.nDroppedFrames,
          finalStimFrameTimes,
@@ -133,13 +135,9 @@ dh %>% filter( anyHiccupsLastFrames > 0)  %>%
 #Finished timing checks
 
 #Remove trials with timingHiccupsInLastFramesOfStimuli
-dh <- dh %>% filter(timingHiccupsInLastFramesOfStimuli > 0)
+dh <- dh %>% filter(timingHiccupsInLastFramesOfStimuli == 0)
 
-#Try to parse array of finalStimFrameTimes
-textToParse<- dh$finalStimFrameTimes[1]
-cleaned <- textToParse %>% str_remove(fixed('[')) %>% str_remove(fixed(']')) %>% str_squish()
-parsed <- read.table(textConnection(parsed))
-
+#Create function that can parse array of finalStimFrameTimes
 calcAvgOfListFromPsychopy <- function( listAsTextFromPsychopy ){
   #Psychopy lists, like the frametimes the program outputs, end up as character vectors (strings)
   #like this:
@@ -160,8 +158,11 @@ dhh<- dh %>% rowwise() %>% #If don't call rowwise(), have to vectorise
   mutate(avgDurLastFrames = calcAvgOfListFromPsychopy(finalStimFrameTimes) )
 
 #Calculate final velocity from penultimatex0
-dhh <- dhh %>% mutate(finalx = P.objects[0].finalx0 - P.objects[0].penultimatex0 )
-
+dhh <- dhh %>% mutate(dx = obj0finalX - obj0penultimateX,
+                      dy = obj0finalY - obj0penultimateY)
+dhh<- dhh %>% mutate(finalDirection = atan2(dy,dx)/pi*180)
+dhh<- dhh %>% mutate(finalSpeed =    sqrt(dx*dx + dy*dy) / (avgDurLastFrames/1000))
+  
 #Calculate distance between mouse.click and target
 dh <- dh %>% mutate(xErr = obj0finalX - mouse.x,
               yErr = obj0finalY - mouse.y)
