@@ -150,7 +150,7 @@ calcAvgOfListFromPsychopy <- function( listAsTextFromPsychopy ){
   cleaned <- listAsTextFromPsychopy %>% str_remove(fixed('[')) %>% str_remove(fixed(']')) %>% str_squish()
   #rely on the remaining whitespace to allow read.table to parse it
   parsed <- read.table(textConnection(cleaned))
-
+  #print( round(t(parsed)-16) )
   avg = mean( t(parsed) ) #Transpose into a single column, then take mean
   return(avg)
 }
@@ -159,7 +159,8 @@ calcAvgOfListFromPsychopy <- function( listAsTextFromPsychopy ){
 dhh<- dh %>% rowwise() %>% #If don't call rowwise(), have to vectorise
   mutate(avgDurLastFrames = calcAvgOfListFromPsychopy(finalStimFrameTimes) )
 
-#Calculate final velocity from
+#Calculate final velocity from penultimatex0
+dhh <- dhh %>% mutate(finalx = P.objects[0].finalx0 - P.objects[0].penultimatex0 )
 
 #Calculate distance between mouse.click and target
 dh <- dh %>% mutate(xErr = obj0finalX - mouse.x,
