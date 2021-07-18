@@ -107,6 +107,7 @@ dg <-df %>%
          obj0finalY = `P.objects[0].finaly0`,
          timingHiccupsInLastFramesOfStimuli,
          win.nDroppedFrames,
+         finalStimFrameTimes,
          RT = mouse.time) 
 
 #Investigate the breakdown of practice and real trials
@@ -131,6 +132,32 @@ dh %>% filter( anyHiccupsLastFrames > 0)  %>%
 #Remove trials with timingHiccupsInLastFramesOfStimuli
 dh <- dh %>% filter(timingHiccupsInLastFramesOfStimuli > 0)
 
+#Try to parse array of finalStimFrameTimes
+textToParse<- dh$finalStimFrameTimes[1]
+cleaned <- textToParse %>% str_remove(fixed('[')) %>% str_remove(fixed(']')) %>% str_squish()
+parsed <- read.table(textConnection(parsed))
+
+calcAvgOfListFromPsychopy <- function( listAsTextFromPsychopy ){
+  #Psychopy lists, like the frametimes the program outputs, end up as character vectors (strings)
+  #like this:
+  # "[16.56737499 16.67500002 16.98479103 16.32583397\n
+  # 16.76725002 16.52166597 16.80783404 16.22549997 ]"
+  
+  #Clean out brackets and whitespace including newlines
+  cleaned <- listAsTextFromPsychopy %>% str_remove(fixed('[')) %>% str_remove(fixed(']')) %>% str_squish()
+  #rely on the remaining whitespace to allow read.table to parse it
+  parsed <- read.table(textConnection(cleaned))
+
+  avg = mean( t(parsed) ) #Transpose into a single column, then take mean
+  return(avg)
+}
+
+#Try to apply that function to every row, calculating the mean refresh rate for the last trials
+dhh<- dh %>% rowwise() %>% #If don't call rowwise(), have to vectorise
+  mutate(avgDurLastFrames = calcAvgOfListFromPsychopy(finalStimFrameTimes) )
+
+#Calculate final velocity from
+
 #Calculate distance between mouse.click and target
 dh <- dh %>% mutate(xErr = obj0finalX - mouse.x,
               yErr = obj0finalY - mouse.y)
@@ -140,10 +167,11 @@ ggplot(dh, aes(xErr,yErr)) + geom_point()
 
 #Calculate various distance metrics
 
+#Save data
 write_rds(dg, here("exp1","data_processed",outputFname))
 
 
-# prepare trajectories ----------------------------------------------------
+# prepare trajectories for analysis --------------------------------------
 
 trajectories_pth <- file.path(here("exp1"),"trajectories")
 
