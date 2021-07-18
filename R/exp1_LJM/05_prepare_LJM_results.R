@@ -6,12 +6,16 @@ library(here)
 source(here("utils.R"))
 
 local_data_pth <- file.path(here("..","exp1_LJM"), "data")
-dir(local_data_pth)
+#dir(local_data_pth)
 
 outpth <- here("exp1_LJM")
 
-files <- dir(local_data_pth, pattern = "*.csv") # get file names
-files <- tibble(fname=files)
+#Get file list and sort by creation time, from most recent to oldest
+#https://stackoverflow.com/a/13762544/302378
+files_with_details = file.info(  list.files(local_data_pth,pattern="*.csv")        )
+files_with_details = files_with_details[with(files_with_details,order(as.POSIXct(ctime))), ]
+files = rownames(files_with_details) #sorted list of files
+files <- tibble(files) %>% arrange(-row_number())
 
 outputFname = "data_exp1.rds"
 
@@ -19,7 +23,6 @@ testWithTwoFiles<- FALSE #hand-pick two files for testing purposes
 if (testWithTwoFiles) {
   outputFname = "data_test.rds"
 }
-
 if (testWithTwoFiles) {
   files <- files %>% filter(fname=="999_noiseMot_exp1_noise_2021_Jul_15_1439.csv" | 
                           fname=="999_noiseMot_exp1_noise_2021_Jul_16_0935_1.csv")
@@ -32,8 +35,8 @@ print(msg)
 try_reading_one_file <- T
 if (try_reading_one_file) {
   #testfile <- "999_noiseMot_exp1_noise_2021_May_10_1219.csv"
-  testfile<- file.path(local_data_pth, fnames[1])
-  df_try <- read_csv(testfile)
+  testfile<- files$files[1]
+  df_try <- read_csv(  file.path(local_data_pth, testfile) )
   # df_try <- read_csv(testfile,
   #                            col_types = cols(.default = col_double(),
   #                                mark_type = col_character(),
