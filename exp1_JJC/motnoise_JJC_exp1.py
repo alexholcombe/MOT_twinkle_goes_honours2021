@@ -1346,7 +1346,7 @@ for thisTrial in trials:
     
     # mark
     first_mark = 1
-    o1.setImage(gabor_name_pth)
+    #o1.setImage(gabor_name_pth)
     # setup some python lists for storing info about the mouse
     mouse.x = []
     mouse.y = []
