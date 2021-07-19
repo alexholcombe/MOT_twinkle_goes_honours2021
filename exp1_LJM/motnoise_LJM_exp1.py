@@ -21,6 +21,9 @@ import os, shutil  # handy system and path functions
 import sys  # to get file system encoding
 
 from psychopy.hardware import keyboard
+
+from datetime import datetime
+
 debug=False #Print more information to console
 autopilot=True
 demo=False
@@ -212,8 +215,8 @@ import motbox
 import time
 import copy
 
-nTargets = 4 # number of targets (that will be highlighted in cue phase)
-n_objects = 8 # number of objects (could be loaded automatically from file
+nTargets = 1 # number of targets (that will be highlighted in cue phase)
+n_objects = 1 # number of objects (could be loaded automatically from file
 
 # configure experiment
 cue_time = 2     # duration of cueing phase in seconds
@@ -222,14 +225,7 @@ cue_time = 2     # duration of cueing phase in seconds
 win.mouseVisible = False
 
 #object template
-o1 = visual.ImageStim(
-    win=win,
-    name='o1', units='pix', 
-    image='sin', mask=None,
-    ori=0, pos=(10000, 10000), size=(64, 64),
-    color=[1,1,1], colorSpace='rgb', opacity=1,
-    flipHoriz=False, flipVert=False,
-    texRes=128, interpolate=True, depth=-1.0)
+
 mouse = event.Mouse(win=win)
 x, y = [None, None]
 mouse.mouseClock = core.Clock()
@@ -278,15 +274,6 @@ import copy
 # hide mouse cursor
 win.mouseVisible = False
 
-
-o1 = visual.ImageStim(
-    win=win,
-    name='o1', units='pix', 
-    image='sin', mask=None,
-    ori=0, pos=(10000, 10000), size=(64, 64),
-    color=[1,1,1], colorSpace='rgb', opacity=1,
-    flipHoriz=False, flipVert=False,
-    texRes=128, interpolate=True, depth=-1.0)
 mouse = event.Mouse(win=win)
 x, y = [None, None]
 mouse.mouseClock = core.Clock()
@@ -600,16 +587,15 @@ for thisPractice_trial in practice_trials:
     win.mouseVisible = False
     
     # load gabor based on the used contrast LJM
-    gabor_name_pth = 'gabors/circle.png'
+    #gabor_name_pth = 'gabors/circle.png'
     
     # This is a template for one object
-    o1 = visual.ImageStim(
-        win=win, name='o1',units='pix', 
-        image=gabor_name_pth, mask=None,
-        ori=0, pos=(10000, 10000), size=(64, 64),
-        color=[1,1,1], colorSpace='rgb', opacity=1,
-        flipHoriz=False, flipVert=False,
-        texRes=128, interpolate=True, depth=-1.0)
+    o1 = psychopy.visual.Circle(
+        win=win, name ='o1',
+        units="pix",
+        radius=28,
+        fillColor=['red'],
+        lineColor=['red'], depth =-1.0)
     o1.setAutoDraw(False) #Because copies will be made of it by Puppetteer (P), and it will draw them, so o1 is never drawn
     
     # and circular highlighting
@@ -622,7 +608,7 @@ for thisPractice_trial in practice_trials:
         fillColor=None, fillColorSpace='rgb', autoDraw=False,
         opacity=1, depth=-1.0, interpolate=True)
     mouseHighlight = visual.Circle(
-            win=win, name='mouseHighlight',units='pix', radius=24,
+            win=win, name='mouseHighlight',units='pix', radius=28,
             pos=(0, 0),
             lineColor=None, lineColorSpace='rgb',
             fillColor=[0.4,0.4,1], fillColorSpace='rgb', autoDraw=False,
@@ -681,7 +667,7 @@ for thisPractice_trial in practice_trials:
     P.update_positions_psychopy(start_time2)
     pos_obj1 = P.objects[0].pos
     
-    o1.setImage(gabor_name_pth)
+    #o1.setImage(gabor_name_pth)
     # setup some python lists for storing info about the mouse
     mouse.x = []
     mouse.y = []
@@ -1205,16 +1191,15 @@ for thisTrial in trials:
     win.mouseVisible = False
     
     # load gabor based on the used contrast LJM
-    gabor_name_pth = 'gabors/circle.png'
+    #gabor_name_pth = 'gabors/circle.png'
     
     # This is a template for one object
-    o1 = visual.ImageStim(
-        win=win, name='o1',units='pix', 
-        image=gabor_name_pth, mask=None,
-        ori = 0, pos=(10000, 10000), size=(64, 64),
-        color=[1,1,1], colorSpace='rgb', opacity=1,
-        flipHoriz=False, flipVert=False,
-        texRes=128, interpolate=True, depth=-1.0)
+    o1 = psychopy.visual.Circle(
+        win=win, name ='o1',
+        units="pix",
+        radius=28,
+        fillColor=['red'],
+        lineColor=['red'], depth =-1.0)
     o1.setAutoDraw(False) #Because copies will be made of it by Puppetteer (P), and it will draw them, so o1 is never drawn
     # and circular highlighting
     # this is related to current experiment (see poster)
@@ -1226,7 +1211,7 @@ for thisTrial in trials:
         fillColor=None, fillColorSpace='rgb', autoDraw=False,
         opacity=1, depth=-3.0, interpolate=True)
     mouseHighlight = visual.Circle(
-        win=win, name='mouseHighlight',units='pix', radius=24,
+        win=win, name='mouseHighlight',units='pix', radius=28,
         pos=(0, 0),
         lineColor=None, lineColorSpace='rgb',
         fillColor=[0.4,0.4,1], fillColorSpace='rgb', autoDraw=False,
@@ -1285,7 +1270,7 @@ for thisTrial in trials:
     P.update_positions_psychopy(start_time2)
     pos_obj1 = P.objects[0].pos
     
-    o1.setImage(gabor_name_pth)
+    #o1.setImage(gabor_name_pth)
     # setup some python lists for storing info about the mouse
     mouse.x = []
     mouse.y = []
