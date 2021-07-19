@@ -611,8 +611,7 @@ for thisPractice_trial in practice_trials:
     gabor_name_pth = 'gabors/circle.png'
     
     # This is a template for one object
-#    
-#visual.ImageStim(
+#    o1 = visual.ImageStim(
 #        win=win, name='o1',units='pix', 
 #        image=gabor_name_pth, mask=None,
 #        ori=0, pos=(10000, 10000), size=(64, 64),
@@ -735,6 +734,10 @@ for thisPractice_trial in practice_trials:
     P.objects[0].finaly0 = -999
     P.objects[0].penultimatex0 = -999 #this is just for recording the penultimate position to the data file
     P.objects[0].penultimatey0 = -999 #this is just for recording the penultimate position to the data file
+    P.objects[0].antepenultimatex0 = -999 #this is just for recording the antepenultimate position to the data file
+    P.objects[0].antepenultimatey0 = -999 #this is just for recording the antepenultimate position to the data file
+    P.objects[0].preantepenultimatex0 = -999 #this is just for recording the preantepenultimate position to the data file
+    P.objects[0].preantepenultimatey0 = -999 #this is just for recording the preantepenultimate position to the data file
     # reset timers
     t = 0
     _timeToFirstFrame = win.getFutureFlipTime(clock="now")
@@ -827,6 +830,10 @@ for thisPractice_trial in practice_trials:
                 win.timeOnFlip(P.objects[0], 'tLastFrame')  # set P.objects[0].tLastFrame to time at next scr refresh
                 #To record the penultimate position to the data file, on each pass-through, set it to final before setting final to current, so that
                 #at the last frame, final will be final
+                P.objects[0].preantepenultimatex0 = P.objects[0].antepenultimatex0
+                P.objects[0].preantepenultimatey0 = P.objects[0].antepenultimatey0
+                P.objects[0].antepenultimatex0 = P.objects[0].penultimatex0
+                P.objects[0].antepenultimatey0 = P.objects[0].penultimatey0
                 P.objects[0].penultimatex0 = P.objects[0].finalx0 #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
                 P.objects[0].penultimatey0 = P.objects[0].finaly0 #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
                 #Record last x,y of object 0
@@ -976,6 +983,10 @@ for thisPractice_trial in practice_trials:
     practice_trials.addData('P.objects[0].tLastFrame', P.objects[0].tLastFrame - globalClockAheadBy)
     practice_trials.addData('P.objects[0].penultimatex0',P.objects[0].penultimatex0)
     practice_trials.addData('P.objects[0].penultimatey0',P.objects[0].penultimatey0)
+    practice_trials.addData('P.objects[0].antepenultimatex0',P.objects[0].antepenultimatex0)
+    practice_trials.addData('P.objects[0].antepenultimatey0',P.objects[0].antepenultimatey0)
+    practice_trials.addData('P.objects[0].preantepenultimatex0',P.objects[0].preantepenultimatex0)
+    practice_trials.addData('P.objects[0].preantepenultimatey0',P.objects[0].preantepenultimatey0)
     practice_trials.addData('P.objects[0].finalx0',P.objects[0].finalx0)
     practice_trials.addData('P.objects[0].finaly0',P.objects[0].finaly0)
     
@@ -1335,7 +1346,7 @@ for thisTrial in trials:
     
     # mark
     first_mark = 1
-    # o1.setImage(gabor_name_pth)
+    o1.setImage(gabor_name_pth)
     # setup some python lists for storing info about the mouse
     mouse.x = []
     mouse.y = []
@@ -1376,7 +1387,10 @@ for thisTrial in trials:
     P.objects[0].finaly0 = -999
     P.objects[0].penultimatex0 = -999 #this is just for recording the penultimate position to the data file
     P.objects[0].penultimatey0 = -999 #this is just for recording the penultimate position to the data file
-    
+    P.objects[0].antepenultimatex0 = -999 #this is just for recording the antepenultimate position to the data file
+    P.objects[0].antepenultimatey0 = -999 #this is just for recording the antepenultimate position to the data file
+    P.objects[0].preantepenultimatex0 = -999 #this is just for recording the preantepenultimate position to the data file
+    P.objects[0].preantepenultimatey0 = -999 #this is just for recording the preantepenultimate position to the data file
     # reset timers
     t = 0
     _timeToFirstFrame = win.getFutureFlipTime(clock="now")
@@ -1472,6 +1486,10 @@ for thisTrial in trials:
                 win.timeOnFlip(P.objects[0], 'tLastFrame')  # set P.objects[0].tLastFrame to time at next scr refresh
                  #To record the penultimate position to the data file, on each pass-through, set it to final before setting final to current, so that
                 #at the last frame, final will be final
+                P.objects[0].preantepenultimatex0 = P.objects[0].antepenultimatex0
+                P.objects[0].preantepenultimatey0 = P.objects[0].antepenultimatey0
+                P.objects[0].antepenultimatex0 = P.objects[0].penultimatex0
+                P.objects[0].antepenultimatey0 = P.objects[0].penultimatey0
                 P.objects[0].penultimatex0 = P.objects[0].finalx0 #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
                 P.objects[0].penultimatey0 = P.objects[0].finaly0 #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
                 #Record last x,y of object 0
@@ -1624,6 +1642,10 @@ for thisTrial in trials:
     trials.addData('P.objects[0].tLastFrame', P.objects[0].tLastFrame - globalClockAheadBy)
     trials.addData('P.objects[0].penultimatex0',P.objects[0].penultimatex0)
     trials.addData('P.objects[0].penultimatey0',P.objects[0].penultimatey0)
+    trials.addData('P.objects[0].antepenultimatex0',P.objects[0].antepenultimatex0)
+    trials.addData('P.objects[0].antepenultimatey0',P.objects[0].antepenultimatey0)
+    trials.addData('P.objects[0].preantepenultimatex0',P.objects[0].preantepenultimatex0)
+    trials.addData('P.objects[0].preantepenultimatey0',P.objects[0].preantepenultimatey0)
     trials.addData('P.objects[0].finalx0',P.objects[0].finalx0)
     trials.addData('P.objects[0].finaly0',P.objects[0].finaly0)
     
