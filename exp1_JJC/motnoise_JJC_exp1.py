@@ -11,7 +11,7 @@ from psychopy import prefs
 from psychopy import sound, gui, visual, core, data, event, logging, clock, colors
 from psychopy import event
 from psychopy.constants import (NOT_STARTED, STARTED, PLAYING, PAUSED,
-                            STOPPED, FINISHED, PRESSED, RELEASED, FOREVER)
+                                STOPPED, FINISHED, PRESSED, RELEASED, FOREVER)
 import numpy as np  # whole numpy lib is available, prepend 'np.'
 import pylab #for some frametimes plotting
 from numpy import (sin, cos, tan, log, log10, pi, average,
@@ -20,6 +20,8 @@ from numpy.random import random, randint, normal, shuffle, choice as randchoice
 import os, shutil  # handy system and path functions
 import sys  # to get file system encoding
 from psychopy.hardware import keyboard
+
+from datetime import datetime
 
 debug=False #Print more information to console
 autopilot=False
@@ -99,7 +101,7 @@ myWin.close() #have to close window to show dialog box
 # Store info about the experiment session
 from psychopy import __version__ # Get the PsychoPy version currently in use
 psychopyVersion = __version__
-expName = 'noiseMot_exp1_noise'  
+expName = 'noiseMot_exp1_noise'  # from the Builder filename that created this script
 expInfo = {'motbox_path': '../', 'participant': '999', 'protocol': '1'}
 
 myDlg = gui.DlgFromDict(dictionary=expInfo, sortKeys=False, title=expName, show=False)
@@ -130,9 +132,10 @@ expInfo['psychopyVersion'] = psychopyVersion
 
 # Data file name stem = absolute path + name; later add .psyexp, .csv, .log, etc
 filename = _thisDir + os.sep + u'data/%s_%s_%s' % (expInfo['participant'], expName, expInfo['date'])
+
 if not demo and not debug: #Save a copy of the code so know exactly what the code was for each participant
     shutil.copy2(sys.argv[0], filename + '.py') #https://stackoverflow.com/questions/123198/how-can-a-file-be-copied
-    
+
 # An ExperimentHandler isn't essential but helps with data saving
 thisExp = data.ExperimentHandler(name=expName, version='',
     extraInfo=expInfo, runtimeInfo=runInfo,
@@ -226,17 +229,7 @@ cue_time = 2     # duration of cueing phase in seconds
 
 # hide mouse cursor
 win.mouseVisible = False
-
-#object template
-
-o1 = visual.ImageStim(
-    win=win,
-    name='o1', units='pix', 
-    image='sin', mask=None,
-    ori=0, pos=(10000, 10000), size=(64, 64),
-    color=[1,1,1], colorSpace='rgb', opacity=1,
-    flipHoriz=False, flipVert=False,
-    texRes=128, interpolate=True, depth=-1.0)
+    
 mouse = event.Mouse(win=win)
 x, y = [None, None]
 mouse.mouseClock = core.Clock()
@@ -285,14 +278,6 @@ cue_time = 2     # duration of cueing phase in seconds
 # hide mouse cursor
 win.mouseVisible = False
 
-o1 = visual.ImageStim(
-    win=win,
-    name='o1', units='pix', 
-    image='sin', mask=None,
-    ori=0, pos=(10000, 10000), size=(64, 64),
-    color=[1,1,1], colorSpace='rgb', opacity=1,
-    flipHoriz=False, flipVert=False,
-    texRes=128, interpolate=True, depth=-1.0)
 mouse = event.Mouse(win=win)
 x, y = [None, None]
 mouse.mouseClock = core.Clock()
@@ -626,13 +611,19 @@ for thisPractice_trial in practice_trials:
     gabor_name_pth = 'gabors/circle.png'
     
     # This is a template for one object
-    o1 = visual.ImageStim(
-        win=win, name='o1',units='pix', 
-        image=gabor_name_pth, mask=None,
-        ori=0, pos=(10000, 10000), size=(64, 64),
-        color=[1,1,1], colorSpace='rgb', opacity=1,
-        flipHoriz=False, flipVert=False,
-        texRes=128, interpolate=True, depth=-1.0)
+#    o1 = visual.ImageStim(
+#        win=win, name='o1',units='pix', 
+#        image=gabor_name_pth, mask=None,
+#        ori=0, pos=(10000, 10000), size=(64, 64),
+#        color=[1,1,1], colorSpace='rgb', opacity=1,
+#        flipHoriz=False, flipVert=False,
+#        texRes=128, interpolate=True, depth=-1.0)
+    o1 = psychopy.visual.Circle(
+        win=win, name ='o1',
+        units="pix",
+        radius=28,
+        fillColor=['red'],
+        lineColor=['red'], depth =-1.0)
     o1.setAutoDraw(False) #Because copies will be made of it by Puppetteer (P), and it will draw them, so o1 is never drawn
    
     #Set up cage postcue that tells the participant which quadrant they need to pick a target from
@@ -643,7 +634,7 @@ for thisPractice_trial in practice_trials:
             fillColor=None, fillColorSpace='rgb', autoDraw=False,
             opacity=1, depth=-1.0, interpolate=True)
     mouseHighlight = visual.Circle(
-            win=win, name='mouseHighlight',units='pix', radius=24,
+            win=win, name='mouseHighlight',units='pix', radius=28,
             pos=(0, 0),
             lineColor=None, lineColorSpace='rgb',
             fillColor=[0.4,0.4,1], fillColorSpace='rgb', autoDraw=False,
@@ -716,7 +707,7 @@ for thisPractice_trial in practice_trials:
     
     # mark
     first_mark = 1
-    o1.setImage(gabor_name_pth)
+    #o1.setImage(gabor_name_pth)
     # setup some python lists for storing info about the mouse
     mouse.x = []
     mouse.y = []
@@ -743,7 +734,10 @@ for thisPractice_trial in practice_trials:
     P.objects[0].finaly0 = -999
     P.objects[0].penultimatex0 = -999 #this is just for recording the penultimate position to the data file
     P.objects[0].penultimatey0 = -999 #this is just for recording the penultimate position to the data file
-
+    P.objects[0].antepenultimatex0 = -999 #this is just for recording the antepenultimate position to the data file
+    P.objects[0].antepenultimatey0 = -999 #this is just for recording the antepenultimate position to the data file
+    P.objects[0].preantepenultimatex0 = -999 #this is just for recording the preantepenultimate position to the data file
+    P.objects[0].preantepenultimatey0 = -999 #this is just for recording the preantepenultimate position to the data file
     # reset timers
     t = 0
     _timeToFirstFrame = win.getFutureFlipTime(clock="now")
@@ -834,9 +828,12 @@ for thisPractice_trial in practice_trials:
                 #Record the time of the very last frame that the stimuli are still on, by doing it over and over, so when the code ceases it will be correct.
                 P.objects[0].tLastFrame = -999 #dummy value which will hopefully get overwritten on win flip by the next line, over and over until the very last frame
                 win.timeOnFlip(P.objects[0], 'tLastFrame')  # set P.objects[0].tLastFrame to time at next scr refresh
-                
                 #To record the penultimate position to the data file, on each pass-through, set it to final before setting final to current, so that
                 #at the last frame, final will be final
+                P.objects[0].preantepenultimatex0 = P.objects[0].antepenultimatex0
+                P.objects[0].preantepenultimatey0 = P.objects[0].antepenultimatey0
+                P.objects[0].antepenultimatex0 = P.objects[0].penultimatex0
+                P.objects[0].antepenultimatey0 = P.objects[0].penultimatey0
                 P.objects[0].penultimatex0 = P.objects[0].finalx0 #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
                 P.objects[0].penultimatey0 = P.objects[0].finaly0 #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
                 #Record last x,y of object 0
@@ -882,7 +879,8 @@ for thisPractice_trial in practice_trials:
                         noise.draw() #AOH
                         if (frameN-noise.frameNStart) % 2 == 0:
                             noise.updateNoise()
-
+            else:
+                noise.draw( )
             # used to highlight cages
             cue.lineWidth = 10
             h_line.draw( )
@@ -985,6 +983,10 @@ for thisPractice_trial in practice_trials:
     practice_trials.addData('P.objects[0].tLastFrame', P.objects[0].tLastFrame - globalClockAheadBy)
     practice_trials.addData('P.objects[0].penultimatex0',P.objects[0].penultimatex0)
     practice_trials.addData('P.objects[0].penultimatey0',P.objects[0].penultimatey0)
+    practice_trials.addData('P.objects[0].antepenultimatex0',P.objects[0].antepenultimatex0)
+    practice_trials.addData('P.objects[0].antepenultimatey0',P.objects[0].antepenultimatey0)
+    practice_trials.addData('P.objects[0].preantepenultimatex0',P.objects[0].preantepenultimatex0)
+    practice_trials.addData('P.objects[0].preantepenultimatey0',P.objects[0].preantepenultimatey0)
     practice_trials.addData('P.objects[0].finalx0',P.objects[0].finalx0)
     practice_trials.addData('P.objects[0].finaly0',P.objects[0].finaly0)
     
@@ -1047,7 +1049,6 @@ for thisPractice_trial in practice_trials:
 # completed 1 repeats of 'practice_trials'
 
 #REAL TRIALS
-    
 # ------Prepare to start Routine "before_trials"-------
 continueRoutine = True
 # update component parameters for each repeat
@@ -1254,14 +1255,12 @@ for thisTrial in trials:
     gabor_name_pth = 'gabors/circle.png'
     
     # This is a template for one object
-    o1 = visual.ImageStim(
-        win=win, name='o1',units='pix', 
-        image=gabor_name_pth, #gabor or circle image
-        mask=None,
-        pos=(10000, 10000), size=(64, 64),
-        color=[1,1,1], colorSpace='rgb', opacity=1,
-        flipHoriz=False, flipVert=False,
-        texRes=128, interpolate=True, depth=-1.0)
+    o1 = psychopy.visual.Circle(
+        win=win, name ='o1',
+        units="pix",
+        radius=28,
+        fillColor=['red'],
+        lineColor=['red'], depth =-1.0)
 
     o1.setAutoDraw(False) #Because copies will be made of it by Puppetteer (P), and it will draw them, so o1 is never drawn
    
@@ -1273,7 +1272,7 @@ for thisTrial in trials:
             fillColor=None, fillColorSpace='rgb', autoDraw=False,
             opacity=1, depth=-1.0, interpolate=True)
     mouseHighlight = visual.Circle(
-            win=win, name='mouseHighlight',units='pix', radius=24,
+            win=win, name='mouseHighlight',units='pix', radius=28,
             pos=(0, 0),
             lineColor=None, lineColorSpace='rgb',
             fillColor=[0.4,0.4,1], fillColorSpace='rgb', autoDraw=False,
@@ -1347,7 +1346,7 @@ for thisTrial in trials:
     
     # mark
     first_mark = 1
-    o1.setImage(gabor_name_pth)
+    #o1.setImage(gabor_name_pth)
     # setup some python lists for storing info about the mouse
     mouse.x = []
     mouse.y = []
@@ -1386,6 +1385,12 @@ for thisTrial in trials:
             thisComponent.status = NOT_STARTED
     P.objects[0].finalx0 = -999 #this is just for recording the final position to the data file
     P.objects[0].finaly0 = -999
+    P.objects[0].penultimatex0 = -999 #this is just for recording the penultimate position to the data file
+    P.objects[0].penultimatey0 = -999 #this is just for recording the penultimate position to the data file
+    P.objects[0].antepenultimatex0 = -999 #this is just for recording the antepenultimate position to the data file
+    P.objects[0].antepenultimatey0 = -999 #this is just for recording the antepenultimate position to the data file
+    P.objects[0].preantepenultimatex0 = -999 #this is just for recording the preantepenultimate position to the data file
+    P.objects[0].preantepenultimatey0 = -999 #this is just for recording the preantepenultimate position to the data file
     # reset timers
     t = 0
     _timeToFirstFrame = win.getFutureFlipTime(clock="now")
@@ -1479,6 +1484,14 @@ for thisTrial in trials:
                 #Record the time of the very last frame that the stimuli are still on, by doing it over and over, so when the code ceases it will be correct.
                 P.objects[0].tLastFrame = -999 #dummy value which will hopefully get overwritten on win flip by the next line, over and over until the very last frame
                 win.timeOnFlip(P.objects[0], 'tLastFrame')  # set P.objects[0].tLastFrame to time at next scr refresh
+                 #To record the penultimate position to the data file, on each pass-through, set it to final before setting final to current, so that
+                #at the last frame, final will be final
+                P.objects[0].preantepenultimatex0 = P.objects[0].antepenultimatex0
+                P.objects[0].preantepenultimatey0 = P.objects[0].antepenultimatey0
+                P.objects[0].antepenultimatex0 = P.objects[0].penultimatex0
+                P.objects[0].antepenultimatey0 = P.objects[0].penultimatey0
+                P.objects[0].penultimatex0 = P.objects[0].finalx0 #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
+                P.objects[0].penultimatey0 = P.objects[0].finaly0 #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
                 #Record last x,y of object 0
                 P.objects[0].finalx0 = P.objects[0].pos[0] #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
                 P.objects[0].finaly0 = P.objects[0].pos[1]
@@ -1523,7 +1536,8 @@ for thisTrial in trials:
                         noise.draw() #AOH
                         if (frameN-noise.frameNStart) % 2 == 0:
                             noise.updateNoise()
-
+            else:
+                noise.draw( )
             # used to highlight cages
             cue.lineWidth = 10
             h_line.draw( )
@@ -1626,6 +1640,12 @@ for thisTrial in trials:
 
     trials.addData('P.objects[0].started', P.objects[0].tStartRefresh - globalClockAheadBy)
     trials.addData('P.objects[0].tLastFrame', P.objects[0].tLastFrame - globalClockAheadBy)
+    trials.addData('P.objects[0].penultimatex0',P.objects[0].penultimatex0)
+    trials.addData('P.objects[0].penultimatey0',P.objects[0].penultimatey0)
+    trials.addData('P.objects[0].antepenultimatex0',P.objects[0].antepenultimatex0)
+    trials.addData('P.objects[0].antepenultimatey0',P.objects[0].antepenultimatey0)
+    trials.addData('P.objects[0].preantepenultimatex0',P.objects[0].preantepenultimatex0)
+    trials.addData('P.objects[0].preantepenultimatey0',P.objects[0].preantepenultimatey0)
     trials.addData('P.objects[0].finalx0',P.objects[0].finalx0)
     trials.addData('P.objects[0].finaly0',P.objects[0].finaly0)
     
@@ -1756,8 +1776,6 @@ while continueRoutine and routineTimer.getTime() > 0:
 for thisComponent in byeComponents:
     if hasattr(thisComponent, "setAutoDraw"):
         thisComponent.setAutoDraw(False)
-thisExp.addData('text_4.started', text_4.tStartRefresh)
-thisExp.addData('text_4.stopped', text_4.tStopRefresh)
 
 # Flip one final time so any remaining win.callOnFlip() 
 # and win.timeOnFlip() tasks get executed before quitting
