@@ -2,12 +2,10 @@ library(tidyverse)
 theme_set(theme_classic(16))
 
 library(here)
-
 source(here("utils.R"))
 
 local_data_pth <- file.path(here("..","exp1_LJM"), "data")
 #dir(local_data_pth)
-
 outpth <- here("exp1_LJM")
 
 #Get file list and sort by creation time, from most recent to oldest
@@ -25,18 +23,18 @@ if (testWithTwoFiles) {
 }
 if (testWithTwoFiles) {
   files <- files %>% filter(fname=="999_noiseMot_exp1_noise_2021_Jul_15_1439.csv" | 
-                          fname=="999_noiseMot_exp1_noise_2021_Jul_16_0935_1.csv")
+                              fname=="999_noiseMot_exp1_noise_2021_Jul_16_0935_1.csv")
 }
-fnames <- as.array(files$fname)
+fnames <- as.array(files$files)
 msg<- paste0("Number of files = ",as.character(nrow(fnames)), ".")
 print(msg)
 
 #Try reading an individual file
-try_reading_one_file <- T
-if (try_reading_one_file) {
+analyse_only_most_recent_file <- T
+if (analyse_only_most_recent_file) {
   #testfile <- "999_noiseMot_exp1_noise_2021_May_10_1219.csv"
   testfile<- files$files[1]
-  df_try <- read_csv(  file.path(local_data_pth, testfile) )
+  df <- read_csv(  file.path(local_data_pth, testfile) )
   # df_try <- read_csv(testfile,
   #                            col_types = cols(.default = col_double(),
   #                                mark_type = col_character(),
@@ -53,14 +51,14 @@ if (try_reading_one_file) {
   # )
   
   #If the last trial is not completed, then some columns such as prot_id will be "NA"
-}  
-
-# http://jenrichmond.rbind.io/post/use-map-to-read-many-csv-files/
-df<- fnames %>%                  # read each file into a tibble and combine them all
-  map_dfr(function(x) 
-           read_csv(file.path(local_data_pth, x)
-             )
-  )
+}  else {
+  # http://jenrichmond.rbind.io/post/use-map-to-read-many-csv-files/
+  df<- fnames %>%                  # read each file into a tibble and combine them all
+    map_dfr(function(x) 
+      read_csv(file.path(local_data_pth, x)
+      )
+    )
+}
 #Practice trials have some different columns than real trials, which explains many of the "NA"s
 
 #Be aware that if you quit the experiment early, the final trial will be almost entirely blank and filled in with "NA"
@@ -102,23 +100,30 @@ dg <-df %>%
          protocol = prot_id,
          trial = trial_id,
          trajectory_id,
+         speed1 = Var1, speed2 = Var2, speed3 = Var3,
          practice_trials.thisN,
          trials.thisN,
          mouse.x.firstBadClick, mouse.y.firstBadClick,
          mouse.x, mouse.y,
          obj0finalX = `P.objects[0].finalx0`, 
          obj0finalY = `P.objects[0].finaly0`,
+         obj0penultimateX = `P.objects[0].penultimatex0`,
+         obj0penultimateY = `P.objects[0].penultimatey0`,
          timingHiccupsInLastFramesOfStimuli,
          win.nDroppedFrames,
          finalStimFrameTimes,
          RT = mouse.time) 
 
 #Investigate the breakdown of practice and real trials
-print("Here is a table of participant number versus protocol (1 = real trials):")
-table(dg$participant,dg$protocol) #Because prot_id = 0 means practice trials, 1=real trials
+print("Here is a table of participant number versus protocol (1 = real trials for Josh):")
+table(dg$participant,dg$protocol, useNA="always") #Because prot_id = 0 means practice trials, 1=real trials
+
+print("Here is a table of participant number versus practice trials:")
+table(dg$participant, !is.na(dg$practice_trials.thisN),
+      useNA = "always") #Because practice trials blank if not practice trial
 
 #delete the practice trials
-dh <- dg %>% filter(protocol !=0) 
+dh <- dg %>% filter( is.na(dg$practice_trials.thisN) ) 
 
 #Check number of timing hiccups
 print("Here is a table of participant number versus num timing hiccups in last frames of trials:")
@@ -128,18 +133,14 @@ dh <- dh %>% mutate(anyHiccupsLastFrames = timingHiccupsInLastFramesOfStimuli > 
 
 print("For each participant num trials with hiccups in last frames, and avg missed frames in whole trial for those trials:")
 dh %>% filter( anyHiccupsLastFrames > 0)  %>% 
-       group_by(participant)  %>%
-       summarise( trialsWithHiccupsLastFrames=  n(), avgMissedFramesInWholeTrial = mean(win.nDroppedFrames) )
+  group_by(participant)  %>%
+  summarise( trialsWithHiccupsLastFrames=  n(), avgMissedFramesInWholeTrial = mean(win.nDroppedFrames) )
 #Finished timing checks
 
 #Remove trials with timingHiccupsInLastFramesOfStimuli
-dh <- dh %>% filter(timingHiccupsInLastFramesOfStimuli > 0)
+dh <- dh %>% filter(timingHiccupsInLastFramesOfStimuli == 0)
 
-#Try to parse array of finalStimFrameTimes
-textToParse<- dh$finalStimFrameTimes[1]
-cleaned <- textToParse %>% str_remove(fixed('[')) %>% str_remove(fixed(']')) %>% str_squish()
-parsed <- read.table(textConnection(parsed))
-
+#Create function that can parse array of finalStimFrameTimes
 calcAvgOfListFromPsychopy <- function( listAsTextFromPsychopy ){
   #Psychopy lists, like the frametimes the program outputs, end up as character vectors (strings)
   #like this:
@@ -150,7 +151,7 @@ calcAvgOfListFromPsychopy <- function( listAsTextFromPsychopy ){
   cleaned <- listAsTextFromPsychopy %>% str_remove(fixed('[')) %>% str_remove(fixed(']')) %>% str_squish()
   #rely on the remaining whitespace to allow read.table to parse it
   parsed <- read.table(textConnection(cleaned))
-
+  #print( round(t(parsed)-16) )
   avg = mean( t(parsed) ) #Transpose into a single column, then take mean
   return(avg)
 }
@@ -159,16 +160,39 @@ calcAvgOfListFromPsychopy <- function( listAsTextFromPsychopy ){
 dhh<- dh %>% rowwise() %>% #If don't call rowwise(), have to vectorise
   mutate(avgDurLastFrames = calcAvgOfListFromPsychopy(finalStimFrameTimes) )
 
-#Calculate final velocity from
+#Calculate final velocity from penultimatex0
+dhh <- dhh %>% mutate(dx = obj0finalX - obj0penultimateX,
+                      dy = obj0finalY - obj0penultimateY)
+dhh<- dhh %>% mutate(finalDirection = atan2(dy,dx)/pi*180)
+dhh<- dhh %>% mutate(finalSpeed =    sqrt(dx*dx + dy*dy) / (avgDurLastFrames/1000))
+
+#final direction
+ggplot(dhh, aes(finalDirection)) + geom_histogram()
+#final speed
+ggplot(dhh, aes(finalSpeed)) + geom_histogram()
+
+#ggplot(dhh, aes(obj0finalX)) + geom_histogram()
 
 #Calculate distance between mouse.click and target
-dh <- dh %>% mutate(xErr = obj0finalX - mouse.x,
-              yErr = obj0finalY - mouse.y)
-
-#Plot error data
-ggplot(dh, aes(xErr,yErr)) + geom_point()
+dhh <- dhh %>% mutate(xErr = obj0finalX - mouse.x,
+                      yErr = obj0finalY - mouse.y)
+ggplot(dhh, aes(xErr,yErr)) + geom_point()
 
 #Calculate various distance metrics
+
+#Calculate component of error relative to last direction
+#Project error vector onto direction vector
+# as.vector( (u %*% v) / (v %*% v) ) * v #https://stackoverflow.com/a/62495884/302378
+# https://en.wikipedia.org/wiki/Vector_projection https://en.wikipedia.org/wiki/Dot_product
+# np.dot(x, y) / np.linalg.norm(y)  https://stackoverflow.com/questions/55226011/using-python-to-calculate-vector-projection
+lengthProjected <- function(u, v) {
+  #Dot product of 
+  dotproduct <- (u %*% v)
+  lengthOfV <- sqrt( sum(v^2) )
+  return( dotproduc / lengthOfV )
+  #For whole vector can use the following, although I don't understand it: (as.vector( (u %*% v) / (v %*% v) ) * v)
+}
+
 
 #Save data
 write_rds(dg, here("exp1","data_processed",outputFname))

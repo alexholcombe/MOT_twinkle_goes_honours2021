@@ -53,8 +53,7 @@ if (analyse_only_most_recent_file) {
   # )
   
   #If the last trial is not completed, then some columns such as prot_id will be "NA"
-}  
-else {
+}  else {
   # http://jenrichmond.rbind.io/post/use-map-to-read-many-csv-files/
   df<- fnames %>%                  # read each file into a tibble and combine them all
     map_dfr(function(x) 
@@ -104,6 +103,8 @@ dg <-df %>%
          trial = trial_id,
          trajectory_id,
          practice_trials.thisN,
+         noise_present,
+         no_targets,
          trials.thisN,
          mouse.x.firstBadClick, mouse.y.firstBadClick,
          mouse.x, mouse.y,
@@ -185,19 +186,23 @@ lengthProjected <- function(u, v) {
   #Dot product of 
   dotproduct <- (u %*% v)
   lengthOfV <- sqrt( sum(v^2) )
-  return( dotproduc / lengthOfV )
+  return( dotproduct / lengthOfV )
   #For whole vector can use the following, although I don't understand it: (as.vector( (u %*% v) / (v %*% v) ) * v)
 }
-
-#Test projection
+#Test lengthProjected function
 #u <- c(1.5,sqrt(3)/2)
 #v <- c(2,0)
-#lengthProjected(u,v) #should be 1.5
+#length
 
-(u %*% v) / sqrt( (v*v)[1] + (v*v)[2] )
+#Calculate length projected
+dhh <- dhh %>% mutate( amountExtrapolation = 
+                      lengthProjected( c(xErr,yErr), c(obj0finalX,obj0finalY)    ) )
 
+#plot amount of extrapolation 
+ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~.)
 
-ggplot(dhh, aes(xErr)) + geom_histogram()
+ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~no_targets)
+
 
 #Plot error data
 

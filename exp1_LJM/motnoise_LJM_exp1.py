@@ -17,7 +17,7 @@ import pylab #for some frametimes plotting
 from numpy import (sin, cos, tan, log, log10, pi, average,
                    sqrt, std, deg2rad, rad2deg, linspace, asarray)
 from numpy.random import random, randint, normal, shuffle, choice as randchoice
-import os  # handy system and path functions
+import os, shutil  # handy system and path functions
 import sys  # to get file system encoding
 
 from psychopy.hardware import keyboard
@@ -132,15 +132,13 @@ expInfo['psychopyVersion'] = psychopyVersion
 
 # Data file name stem = absolute path + name; later add .psyexp, .csv, .log, etc
 filename = _thisDir + os.sep + u'data/%s_%s_%s' % (expInfo['participant'], expName, expInfo['date'])
+if not demo and not debug: #Save a copy of the code so know exactly what the code was for each participant
+    shutil.copy2(sys.argv[0], filename + '.py') #https://stackoverflow.com/questions/123198/how-can-a-file-be-copied
 
-if not demo and not debug:
-    saveCodeCmd = 'cp \'' + sys.argv[0] + '\' '+ filename + '.py'
-    os.system(saveCodeCmd)  #save a copy of the code as it was when that subject was run
-    
 # An ExperimentHandler isn't essential but helps with data saving
 thisExp = data.ExperimentHandler(name=expName, version='',
     extraInfo=expInfo, runtimeInfo=runInfo,
-    originPath='/Users/josh/Documents/OneDrive - The University of Sydney (Students)/Empirical Thesis/Code/motNoise_forAlex/exp1/motnoise_exp1_noise_en.py',
+    originPath='/Users/liammaher/Desktop/motNoise_forAlex/exp1',
     savePickle=True, saveWideText=True,
     dataFileName=filename)
 # save a log file for detail verbose info
@@ -241,7 +239,7 @@ before_trialsClock = core.Clock()
 text_5 = visual.TextStim(win=win, name='text_5',
     text='Now the actual experiment begins\n\n\n\n\nPress space',
     font='Arial',
-    pos=(0, 0), height=0.05, wrapWidth=None, ori=0, 
+    pos=(0, 0), height=20, wrapWidth=None, ori=0, 
     color='white', colorSpace='rgb', opacity=1, 
     languageStyle='LTR',
     depth=0.0);
@@ -298,7 +296,7 @@ byeClock = core.Clock()
 text_4 = visual.TextStim(win=win, name='text_4',
     text='Thanks!',
     font='Arial',
-    pos=(0, 0), height=0.1, wrapWidth=None, ori=0, 
+    pos=(0, 0), height=20, wrapWidth=None, ori=0, 
     color='white', colorSpace='rgb', opacity=1, 
     languageStyle='LTR',
     depth=0.0);
@@ -488,7 +486,7 @@ for thisComponent in intro_blockComponents:
 routineTimer.reset()
 
 # set up handler to look after randomisation of conditions etc
-practice_trials = data.TrialHandler(nReps=0, method='sequential', 
+practice_trials = data.TrialHandler(nReps=1, method='sequential', 
 #practice_trials = data.TrialHandler(nReps=1, method='sequential', LJM
     extraInfo=expInfo, originPath=-1,
     trialList=data.importConditions('protocols/P_practice.csv'),
@@ -705,6 +703,9 @@ for thisPractice_trial in practice_trials:
             thisComponent.status = NOT_STARTED
     P.objects[0].finalx0 = -999 #this is just for recording the final position to the data file
     P.objects[0].finaly0 = -999
+    P.objects[0].penultimatex0 = -999 #this is just for recording the penultimate position to the data file
+    P.objects[0].penultimatey0 = -999 #this is just for recording the penultimate position to the data file
+    
     # reset timers
     t = 0
     _timeToFirstFrame = win.getFutureFlipTime(clock="now")
@@ -776,6 +777,12 @@ for thisPractice_trial in practice_trials:
                 #Record the time of the very last frame that the stimuli are still on, by doing it over and over, so when the code ceases it will be correct.
                 P.objects[0].tLastFrame = -999 #dummy value which will hopefully get overwritten on win flip by the next line, over and over until the very last frame
                 win.timeOnFlip(P.objects[0], 'tLastFrame')  # set P.objects[0].tLastFrame to time at next scr refresh
+                
+                 #To record the penultimate position to the data file, on each pass-through, set it to final before setting final to current, so that
+                #at the last frame, final will be final
+                P.objects[0].penultimatex0 = P.objects[0].finalx0 #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
+                P.objects[0].penultimatey0 = P.objects[0].finaly0 #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
+                
                 #Record last x,y of object 0
                 P.objects[0].finalx0 = P.objects[0].pos[0] #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
                 P.objects[0].finaly0 = P.objects[0].pos[1]
@@ -898,6 +905,8 @@ for thisPractice_trial in practice_trials:
         print('P.objects[0].tStartRefresh - globalClockAheadBy = ',P.objects[0].tStartRefresh - globalClockAheadBy)
     practice_trials.addData('P.objects[0].started', P.objects[0].tStartRefresh - globalClockAheadBy)
     practice_trials.addData('P.objects[0].tLastFrame', P.objects[0].tLastFrame - globalClockAheadBy)
+    practice_trials.addData('P.objects[0].penultimatex0',P.objects[0].penultimatex0)
+    practice_trials.addData('P.objects[0].penultimatey0',P.objects[0].penultimatey0)
     practice_trials.addData('P.objects[0].finalx0',P.objects[0].finalx0)
     practice_trials.addData('P.objects[0].finaly0',P.objects[0].finaly0)
     
@@ -1072,13 +1081,14 @@ for thisTrial in trials:
     timeForTrialsRemainingMsg = np.any(trials.thisN==breakTrials)
     if timeForTrialsRemainingMsg :
         pctDone = round(    (1.0*trials.thisN) / (1.0*trials.nTotal)*100,  0  )
-        nextText.setText('Press "SPACE" to continue!')
-        nextText.draw()
+        text_5.setText('Press "SPACE" to continue!')
+        text_5.draw()
         progressMsg = 'Completed ' + str(trials.thisN) + ' of ' + str(trials.nTotal) + ' trials'  #EVA if this doesn't work, change it to progressMsg = ' '
-        NextRemindCountText.setText(progressMsg)
-        NextRemindCountText.draw()
+        text_3.setText(progressMsg)
+        text_3.draw()
         myWin.flip() # myWin.flip(clearBuffer=True) 
         waiting=True
+        expStop = False
         while waiting:
             if autopilot: break
             elif expStop == True:break
@@ -1285,6 +1295,8 @@ for thisTrial in trials:
             thisComponent.status = NOT_STARTED
     P.objects[0].finalx0 = -999 #this is just for recording the final position to the data file
     P.objects[0].finaly0 = -999
+    P.objects[0].penultimatex0 = -999 #this is just for recording the penultimate position to the data file
+    P.objects[0].penultimatey0 = -999 #this is just for recording the penultimate position to the data file
     # reset timers
     t = 0
     _timeToFirstFrame = win.getFutureFlipTime(clock="now")
@@ -1298,6 +1310,7 @@ for thisTrial in trials:
         t = trialClock.getTime()
         tThisFlip = win.getFutureFlipTime(clock=trialClock)
         tThisFlipGlobal = win.getFutureFlipTime(clock=None)
+        timeSuspectGlobalClockAheadBy = tThisFlipGlobal - t
         globalClockAheadBy = trialClock.getLastResetTime() - logging.defaultClock.getLastResetTime()
         frameN = frameN + 1  # number of completed frames (so 0 is the first frame)
         noise.draw( )
@@ -1326,19 +1339,33 @@ for thisTrial in trials:
             P.update_positions_psychopy(start_time2)    
             for i2 in range(n_objects):
                 P.objects[i2].draw() 
-            numOfFinalFramesToRecord = 40
-            tLastFramesStart = stop_time - numOfFinalFramesToRecord*(1.0/refreshRateObserved) #time after which should be the last few frames
-            if t > tLastFramesStart: #make sure pick up the last frames
+            #move phase
+        if t >= cue_time and t <= stop_time:
+            text.draw( )
+            for i2 in range(nTargets):
+                P.objects[i2].size = size_normal
+        P.update_positions_psychopy(start_time2 + t-cue_time)
+        for i2 in range(n_objects):
+            P.objects[i2].draw()
+        numOfFinalFramesToRecord = 40
+        tLastFramesStart = stop_time - numOfFinalFramesToRecord*(1.0/refreshRateObserved) #time after which should be the last few frames
+        if t > tLastFramesStart: #make sure pick up the last frames
                 #Record the time of the very last frame that the stimuli are still on, by doing it over and over, so when the code ceases it will be correct.
-                P.objects[0].tLastFrame = -999 #dummy value which will hopefully get overwritten on win flip by the next line, over and over until the very last frame
-                win.timeOnFlip(P.objects[0], 'tLastFrame')  # set P.objects[0].tLastFrame to time at next scr refresh
-                #Record last x,y of object 0
-                P.objects[0].finalx0 = P.objects[0].pos[0] #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
-                P.objects[0].finaly0 = P.objects[0].pos[1]
+            P.objects[0].tLastFrame = -999 #dummy value which will hopefully get overwritten on win flip by the next line, over and over until the very last frame
+            win.timeOnFlip(P.objects[0], 'tLastFrame')  # set P.objects[0].tLastFrame to time at next scr refresh
+            
+            #To record the penultimate position to the data file, on each pass-through, set it to final before setting final to current, so that
+            #at the last frame, final will be final
+            P.objects[0].penultimatex0 = P.objects[0].finalx0 #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
+            P.objects[0].penultimatey0 = P.objects[0].finaly0 #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
+               
+            #Record last x,y of object 0
+            P.objects[0].finalx0 = P.objects[0].pos[0] #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
+            P.objects[0].finaly0 = P.objects[0].pos[1]
 
                 #But win.timeOnFlip won't work for recording a whole list or array of times because timeOnFlip can't append to an array.
                 #So for recording the interframe intervals of these times the conventional way is https://www.psychopy.org/general/timing/detectingFrameDrops.html
-                win.recordFrameIntervals = True
+            win.recordFrameIntervals = True
                 
                 #Another way is to record it directly myself
                 #https://github.com/psychopy/psychopy/blob/e45520f446697d5b5fad035fa0e4e50088ffa535/psychopy/visual/window.py
@@ -1348,16 +1375,6 @@ for thisTrial in trials:
                 #which are the critical frames, I'll need to record how long the array of win._frameTimes is at the last frame.
                 #win.callOnFlip(appendToLastFrameTimes, frameTime=win._frameTime
                 #win.timeOnFlip( lastFrameTimes[0], 
-        # move phase
-        if t >= cue_time and t <= stop_time:
-            text.draw( )
-            # normalize sizes 
-            for i2 in range(nTargets):
-                P.objects[i2].size = size_normal
-            # update and draw objects
-            P.update_positions_psychopy(start_time2 + t-cue_time)
-            for i2 in range(n_objects):
-                P.objects[i2].draw() 
             
             
         # query phase
@@ -1369,7 +1386,6 @@ for thisTrial in trials:
             if mouse_reset == False :
               mouse.setPos((0,0))
             mouse_reset = True
-            #if noise_present == 'noise' :
             if noise.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
                 noise.frameNStart = frameN  # exact frame index
                 noise.tStart = t  # local t and not account for scr refresh
@@ -1384,10 +1400,12 @@ for thisTrial in trials:
                     if (frameN-noise.frameNStart) %     2==0:
                         noise.updateNoise()
             if (nClicks < 1):
+                win.mouseVisible = True
                 text.draw( )
                 xToHighlightMousePos, yToHighlightMousePos = mouse.getPos()
                 mouseHighlight.setPos([xToHighlightMousePos, yToHighlightMousePos])
                 mouseHighlight.draw( )
+                #buttons, times = mouse.getPressed(getTime=True) #Use this if later decide to use mouse time instead of trialClock.getTime
               
                 if any( mouse.getPressed() ) or autopilot:
                     x, y = mouse.getPos()
@@ -1465,25 +1483,27 @@ for thisTrial in trials:
     if debug:
         print('globalClockAheadBy=',globalClockAheadBy)
         print('P.objects[0].tStartRefresh - globalClockAheadBy = ',P.objects[0].tStartRefresh - globalClockAheadBy)
-    practice_trials.addData('P.objects[0].started', P.objects[0].tStartRefresh - globalClockAheadBy)
-    practice_trials.addData('P.objects[0].tLastFrame', P.objects[0].tLastFrame - globalClockAheadBy)
-    practice_trials.addData('P.objects[0].finalx0',P.objects[0].finalx0)
-    practice_trials.addData('P.objects[0].finaly0',P.objects[0].finaly0)
+    trials.addData('P.objects[0].started', P.objects[0].tStartRefresh - globalClockAheadBy)
+    trials.addData('P.objects[0].tLastFrame', P.objects[0].tLastFrame - globalClockAheadBy)
+    trials.addData('P.objects[0].penultimatex0',P.objects[0].penultimatex0)
+    trials.addData('P.objects[0].penultimatey0',P.objects[0].penultimatey0)
+    trials.addData('P.objects[0].finalx0',P.objects[0].finalx0)
+    trials.addData('P.objects[0].finaly0',P.objects[0].finaly0)
     
 #Record final frametimes when critical stimuli on
-    practice_trials.addData('win.nDroppedFrames',win.nDroppedFrames)
+    trials.addData('win.nDroppedFrames',win.nDroppedFrames)
     intervals_msec = pylab.array(win.frameIntervals) * 1000
     intervals_msec_last_thistrial = intervals_msec[-numOfFinalFramesToRecord:] #last numOfFinalFramesToRecord
     #intervals_msec = intervals_msec[numOfFinalFramesToRecord
     if debug:
         print('Frame times up to stimuli cessation according to win.frameIntervals=', intervals_msec_last_thistrial)
         print('In last',numOfFinalFramesToRecord,' frames across all trials ', win.nDroppedFrames, ' frames were dropped according to nDroppedFrames.')
-    practice_trials.addData('finalStimFrameTimes',intervals_msec_last_thistrial)
+    trials.addData('finalStimFrameTimes',intervals_msec_last_thistrial)
     #Count the number of timing hiccups and print out and save to log some information about them
     longFrameLimit = np.round(1000/refreshRateObserved*(1.0+frameTimeTolerance),2)
     idxsInterframeLong = np.where( np.array(intervals_msec_last_thistrial) > longFrameLimit ) [0] #frames that exceeded frameTimeTolerance of expected duration
     numCasesInterframeLong = len( idxsInterframeLong )
-    practice_trials.addData('timingHiccupsInLastFramesOfStimuli',numCasesInterframeLong)
+    trials.addData('timingHiccupsInLastFramesOfStimuli',numCasesInterframeLong)
     if numCasesInterframeLong >0 and (not demo):
        longFramesStr =  'ERROR,'+str(numCasesInterframeLong)+' frames were longer than '+str(longFrameLimit)+' ms'
        if demo: 
@@ -1492,7 +1512,7 @@ for thisTrial in trials:
            longFramesStr += ' apparently screen refreshes skipped, interframe durs were:'+\
                     str( np.around(  intervals_msec_last_thistrial[idxsInterframeLong] ,1  ) )+ ' and was these frames: '+ str(idxsInterframeLong)
        if longFramesStr != None:
-                logging.error( 'trialnum='+str(practice_trials.thisN)+' '+longFramesStr )
+                logging.error( 'trialnum='+str(trials.thisN)+' '+longFramesStr )
                 if not demo:
                     flankingAlso=list()
                     for idx in idxsInterframeLong: #also print timing of one before and one after long frame
