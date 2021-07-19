@@ -178,8 +178,25 @@ ggplot(dhh, aes(xErr,yErr)) + geom_point()
 
 #Calculate component of error relative to last direction
 #Project error vector onto direction vector
-dhh <- dhh %>% mutate(err = xErr*xErr,
-                      
+# as.vector( (u %*% v) / (v %*% v) ) * v #https://stackoverflow.com/a/62495884/302378
+# https://en.wikipedia.org/wiki/Vector_projection https://en.wikipedia.org/wiki/Dot_product
+# np.dot(x, y) / np.linalg.norm(y)  https://stackoverflow.com/questions/55226011/using-python-to-calculate-vector-projection
+lengthProjected <- function(u, v) {
+  #Dot product of 
+  dotproduct <- (u %*% v)
+  lengthOfV <- sqrt( sum(v^2) )
+  return( dotproduc / lengthOfV )
+  #For whole vector can use the following, although I don't understand it: (as.vector( (u %*% v) / (v %*% v) ) * v)
+}
+
+#Test projection
+#u <- c(1.5,sqrt(3)/2)
+#v <- c(2,0)
+#lengthProjected(u,v) #should be 1.5
+
+(u %*% v) / sqrt( (v*v)[1] + (v*v)[2] )
+
+
 ggplot(dhh, aes(xErr)) + geom_histogram()
 
 #Plot error data
