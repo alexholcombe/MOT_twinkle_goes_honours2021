@@ -691,6 +691,7 @@ for thisPractice_trial in practice_trials:
     
     P.update_positions_psychopy(start_time2) 
     pos_obj1 = P.objects[0].pos
+    pos_obj2 = P.objects[1].pos
     
     if pos_obj1[0] >  0 :
         if pos_obj1[1] > 0 :
@@ -702,6 +703,20 @@ for thisPractice_trial in practice_trials:
             shouldMark = 1
         else :
             shouldMark = 4
+    
+    if pos_obj2[0] >  0 :
+        if pos_obj2[1] > 0 :
+            obj2_pos = 2
+        else :
+            obj2_pos = 3
+    elif pos_obj2[0] < 0 :
+        if pos_obj2[1] > 0 :
+            obj2_pos = 1
+        else :
+            obj2_pos = 4
+    
+    practice_trials.addData('cued_cage', shouldMark)
+    practice_trials.addData('obj_2_cage', obj2_pos)
     
     stop_time = cue_time + trial_length 
     
@@ -1330,6 +1345,7 @@ for thisTrial in trials:
     
     P.update_positions_psychopy(start_time2) 
     pos_obj1 = P.objects[0].pos
+    pos_obj2 = P.objects[1].pos
     
     if pos_obj1[0] >  0 :
         if pos_obj1[1] > 0 :
@@ -1341,6 +1357,20 @@ for thisTrial in trials:
             shouldMark = 1
         else :
             shouldMark = 4
+    
+    if pos_obj2[0] >  0 :
+        if pos_obj2[1] > 0 :
+            obj2_pos = 2
+        else :
+            obj2_pos = 3
+    elif pos_obj2[0] < 0 :
+        if pos_obj2[1] > 0 :
+            obj2_pos = 1
+        else :
+            obj2_pos = 4
+    
+    trials.addData('cued_cage', shouldMark)
+    trials.addData('obj_2_cage', obj2_pos)
     
     stop_time = cue_time + trial_length 
     
