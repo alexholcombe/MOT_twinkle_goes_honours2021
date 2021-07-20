@@ -25,7 +25,7 @@ from psychopy.hardware import keyboard
 from datetime import datetime
 
 debug=False #Print more information to console
-autopilot=True
+autopilot=False
 demo=False
 
 # Ensure that relative paths start from the same directory as this script
@@ -141,7 +141,6 @@ if not demo and not debug: #Save a copy of the code so know exactly what the cod
 # An ExperimentHandler isn't essential but helps with data saving
 thisExp = data.ExperimentHandler(name=expName, version='',
     extraInfo=expInfo, runtimeInfo=runInfo,
-    originPath='/Users/liammaher/Desktop/motNoise_forAlex/exp1',
     savePickle=True, saveWideText=True,
     dataFileName=filename)
 # save a log file for detail verbose info
@@ -249,14 +248,6 @@ text = visual.TextStim(win=win, name='text',
     color='red', colorSpace='rgb', opacity=1, 
     languageStyle='LTR',
     depth=-10);
-image = visual.ImageStim(
-    win=win,
-    name='image', 
-    image='sin', mask=None,
-    ori=0, pos=(0, 0), size=(2, 2),
-    color=[1,1,1], colorSpace='rgb', opacity=1,
-    flipHoriz=False, flipVert=False,
-    texRes=128, interpolate=True, depth=-2.0)
 
 # Initialize components for Routine "trial"
 trialClock = core.Clock()
@@ -298,7 +289,7 @@ noise = visual.NoiseStim(
     sf=None,
     color=[1,1,1], colorSpace='rgb', opacity=None, blendmode='avg', contrast=1.0,
     texRes=128, filter=None,
-    noiseType='Uniform', noiseElementSize= (8, 8),
+    noiseType='Uniform', noiseElementSize= (6, 6),
     interpolate=False, depth=0.0, units = 'pix')
 noise.buildNoise()
 
@@ -485,6 +476,31 @@ if thisPractice_trial != None:
     for paramName in thisPractice_trial:
         exec('{} = thisPractice_trial[paramName]'.format(paramName))
 
+# This is a template for one object
+o1 = psychopy.visual.Circle(
+    win=win, name ='o1',
+    units="pix",
+    radius=28,
+    fillColor=['red'],
+    lineColor=['red'], depth =-1.0)
+o1.setAutoDraw(False) #Because copies will be made of it by Puppetteer (P), and it will draw them, so o1 is never drawn
+
+# and circular highlighting
+# this is related to current experiment (see poster)
+cue = visual.Rect(
+    win=win, name='cue',units='norm', 
+    size=(1, 1),
+    ori=0, pos=(0.5, 0.5),
+    lineWidth=0, lineColor=[-1,1,-1], lineColorSpace='rgb',
+    fillColor=None, fillColorSpace='rgb', autoDraw=False,
+    opacity=1, depth=-1.0, interpolate=True)
+mouseHighlight = visual.Circle(
+        win=win, name='mouseHighlight',units='pix', radius=28,
+        pos=(0, 0),
+        lineColor=None, lineColorSpace='rgb',
+        fillColor=[0.4,0.4,1], fillColorSpace='rgb', autoDraw=False,
+        opacity=0.8, depth=-1.0, interpolate=True)
+
 for thisPractice_trial in practice_trials:
     mouse_reset = False
     currentLoop = practice_trials
@@ -499,7 +515,7 @@ for thisPractice_trial in practice_trials:
     # update component parameters for each repeat
     win.blendMode = 'add'
     # keep track of which components have finished
-    fixComponents = [text, image]
+    fixComponents = [text]
     for thisComponent in fixComponents:
         thisComponent.tStart = None
         thisComponent.tStop = None
@@ -540,23 +556,6 @@ for thisPractice_trial in practice_trials:
                 text.setAutoDraw(False)
         win.blendMode = 'avg'
         
-        # *image* updates
-        if image.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
-            # keep track of start time/frame for later
-            image.frameNStart = frameN  # exact frame index
-            image.tStart = t  # local t and not account for scr refresh
-            image.tStartRefresh = tThisFlipGlobal  # on global time
-            win.timeOnFlip(image, 'tStartRefresh')  # time at next scr refresh
-            image.setAutoDraw(True)
-        if image.status == STARTED:
-            # is it time to stop? (based on global clock, using actual start)
-            if tThisFlipGlobal > image.tStartRefresh + 0.5-frameTolerance:
-                # keep track of stop time/frame for later
-                image.tStop = t  # not accounting for scr refresh
-                image.frameNStop = frameN  # exact frame index
-                win.timeOnFlip(image, 'tStopRefresh')  # time at next scr refresh
-                image.setAutoDraw(False)
-        
         # check for quit (typically the Esc key)
         if endExpNow or defaultKeyboard.getKeys(keyList=["escape"]):
             core.quit()
@@ -585,34 +584,6 @@ for thisPractice_trial in practice_trials:
     # update component parameters for each repeat
     # probably redudndant
     win.mouseVisible = False
-    
-    # load gabor based on the used contrast LJM
-    #gabor_name_pth = 'gabors/circle.png'
-    
-    # This is a template for one object
-    o1 = psychopy.visual.Circle(
-        win=win, name ='o1',
-        units="pix",
-        radius=28,
-        fillColor=['red'],
-        lineColor=['red'], depth =-1.0)
-    o1.setAutoDraw(False) #Because copies will be made of it by Puppetteer (P), and it will draw them, so o1 is never drawn
-    
-    # and circular highlighting
-    # this is related to current experiment (see poster)
-    cue = visual.Rect(
-        win=win, name='cue',units='norm', 
-        size=(1, 1),
-        ori=0, pos=(0.5, 0.5),
-        lineWidth=0, lineColor=[-1,1,-1], lineColorSpace='rgb',
-        fillColor=None, fillColorSpace='rgb', autoDraw=False,
-        opacity=1, depth=-1.0, interpolate=True)
-    mouseHighlight = visual.Circle(
-            win=win, name='mouseHighlight',units='pix', radius=28,
-            pos=(0, 0),
-            lineColor=None, lineColorSpace='rgb',
-            fillColor=[0.4,0.4,1], fillColorSpace='rgb', autoDraw=False,
-            opacity=0.8, depth=-1.0, interpolate=True)
     
     # load trajectory from file (this was generated using motrack package)
     track_filename = 'trajectories/PT%03d.csv' % trajectory_id
@@ -667,7 +638,6 @@ for thisPractice_trial in practice_trials:
     P.update_positions_psychopy(start_time2)
     pos_obj1 = P.objects[0].pos
     
-    #o1.setImage(gabor_name_pth)
     # setup some python lists for storing info about the mouse
     mouse.x = []
     mouse.y = []
@@ -969,6 +939,7 @@ for thisPractice_trial in practice_trials:
 
 #REAL TRIALS
 # ------Prepare to start Routine "before_trials"-------
+win.blendMode = 'add'
 cue_time = 0.5
 continueRoutine = True
 # update component parameters for each repeat
@@ -1051,7 +1022,6 @@ while continueRoutine:
 for thisComponent in before_trialsComponents:
     if hasattr(thisComponent, "setAutoDraw"):
         thisComponent.setAutoDraw(False)
-win.blendMode = 'avg'
 # the Routine "before_trials" was not non-slip safe, so reset the non-slip timer
 routineTimer.reset()
 
@@ -1066,6 +1036,31 @@ thisTrial = trials.trialList[0]  # so we can initialise stimuli with some values
 if thisTrial != None:
     for paramName in thisTrial:
         exec('{} = thisTrial[paramName]'.format(paramName))
+            
+# This is a template for one object
+o1 = psychopy.visual.Circle(
+    win=win, name ='o1',
+    units="pix",
+    radius=28,
+    fillColor=['red'],
+    lineColor=['red'], depth =-1.0)
+o1.setAutoDraw(False) #Because copies will be made of it by Puppetteer (P), and it will draw them, so o1 is never drawn
+# and circular highlighting
+# this is related to current experiment (see poster)
+cue = visual.Rect(
+    win=win, name='cue',units='norm', 
+    size=(1, 1),
+    ori=0, pos=(0.5, 0.5),
+    lineWidth=0, lineColor=[-1,1,-1], lineColorSpace='rgb',
+    fillColor=None, fillColorSpace='rgb', autoDraw=False,
+    opacity=1, depth=-1.0, interpolate=True)
+mouseHighlight = visual.Circle(
+    win=win, name='mouseHighlight',units='pix', radius=28,
+    pos=(0, 0),
+    lineColor=None, lineColorSpace='rgb',
+    fillColor=[0.4,0.4,1], fillColorSpace='rgb', autoDraw=False,
+    opacity=0.8, depth=-1.0, interpolate=True)
+    
 
 for thisTrial in trials:
     mouse_reset = False
@@ -1103,7 +1098,7 @@ for thisTrial in trials:
     # update component parameters for each repeat
     win.blendMode = 'add'
     # keep track of which components have finished
-    fixComponents = [text, image]
+    fixComponents = [text]
     for thisComponent in fixComponents:
         thisComponent.tStart = None
         thisComponent.tStop = None
@@ -1144,23 +1139,6 @@ for thisTrial in trials:
                 text.setAutoDraw(False)
         win.blendMode = 'avg'
         
-        # *image* updates
-        if image.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
-            # keep track of start time/frame for later
-            image.frameNStart = frameN  # exact frame index
-            image.tStart = t  # local t and not account for scr refresh
-            image.tStartRefresh = tThisFlipGlobal  # on global time
-            win.timeOnFlip(image, 'tStartRefresh')  # time at next scr refresh
-            image.setAutoDraw(True)
-        if image.status == STARTED:
-            # is it time to stop? (based on global clock, using actual start)
-            if tThisFlipGlobal > image.tStartRefresh + 0.5-frameTolerance:
-                # keep track of stop time/frame for later
-                image.tStop = t  # not accounting for scr refresh
-                image.frameNStop = frameN  # exact frame index
-                win.timeOnFlip(image, 'tStopRefresh')  # time at next scr refresh
-                image.setAutoDraw(False)
-        
         # check for quit (typically the Esc key)
         if endExpNow or defaultKeyboard.getKeys(keyList=["escape"]):
             core.quit()
@@ -1189,34 +1167,7 @@ for thisTrial in trials:
     # update component parameters for each repeat
     # probably redudndant
     win.mouseVisible = False
-    
-    # load gabor based on the used contrast LJM
-    #gabor_name_pth = 'gabors/circle.png'
-    
-    # This is a template for one object
-    o1 = psychopy.visual.Circle(
-        win=win, name ='o1',
-        units="pix",
-        radius=28,
-        fillColor=['red'],
-        lineColor=['red'], depth =-1.0)
-    o1.setAutoDraw(False) #Because copies will be made of it by Puppetteer (P), and it will draw them, so o1 is never drawn
-    # and circular highlighting
-    # this is related to current experiment (see poster)
-    cue = visual.Polygon(
-        win=win, name='cue',units='pix', 
-        edges=50, size=(64, 64),
-        ori=0, pos=(10000, 10000),
-        lineWidth=1, lineColor=[1,1,1], lineColorSpace='rgb',
-        fillColor=None, fillColorSpace='rgb', autoDraw=False,
-        opacity=1, depth=-3.0, interpolate=True)
-    mouseHighlight = visual.Circle(
-        win=win, name='mouseHighlight',units='pix', radius=28,
-        pos=(0, 0),
-        lineColor=None, lineColorSpace='rgb',
-        fillColor=[0.4,0.4,1], fillColorSpace='rgb', autoDraw=False,
-        opacity=0.8, depth=-1.0, interpolate=True)
-    
+
     # load trajectory from file (this was generated using motrack package LJM
     track_filename = 'trajectories/T%03d.csv' % trajectory_id
     
@@ -1270,7 +1221,6 @@ for thisTrial in trials:
     P.update_positions_psychopy(start_time2)
     pos_obj1 = P.objects[0].pos
     
-    #o1.setImage(gabor_name_pth)
     # setup some python lists for storing info about the mouse
     mouse.x = []
     mouse.y = []
@@ -1345,31 +1295,30 @@ for thisTrial in trials:
             text.draw( )
             for i2 in range(nTargets):
                 P.objects[i2].size = size_normal
-        P.update_positions_psychopy(start_time2 + t-cue_time)
-        for i2 in range(n_objects):
-            P.objects[i2].draw()
-        numOfFinalFramesToRecord = 40
-        tLastFramesStart = stop_time - numOfFinalFramesToRecord*(1.0/refreshRateObserved) #time after which should be the last few frames
-        if t > tLastFramesStart: #make sure pick up the last frames
+            P.update_positions_psychopy(start_time2 + t-cue_time)
+            for i2 in range(n_objects):
+                P.objects[i2].draw()
+            numOfFinalFramesToRecord = 40
+            tLastFramesStart = stop_time - numOfFinalFramesToRecord*(1.0/refreshRateObserved) #time after which should be the last few frames
+            if t > tLastFramesStart: #make sure pick up the last frames
                 #Record the time of the very last frame that the stimuli are still on, by doing it over and over, so when the code ceases it will be correct.
-            P.objects[0].tLastFrame = -999 #dummy value which will hopefully get overwritten on win flip by the next line, over and over until the very last frame
-            win.timeOnFlip(P.objects[0], 'tLastFrame')  # set P.objects[0].tLastFrame to time at next scr refresh
+                P.objects[0].tLastFrame = -999 #dummy value which will hopefully get overwritten on win flip by the next line, over and over until the very last frame
+                win.timeOnFlip(P.objects[0], 'tLastFrame')  # set P.objects[0].tLastFrame to time at next scr refresh
             
-            #To record the penultimate position to the data file, on each pass-through, set it to final before setting final to current, so that
-            #at the last frame, final will be final
-            P.objects[0].preantepenultimatex0 = P.objects[0].antepenultimatex0
-            P.objects[0].preantepenultimatey0 = P.objects[0].antepenultimatey0
-            P.objects[0].antepenultimatex0 = P.objects[0].penultimatex0
-            P.objects[0].antepenultimatey0 = P.objects[0].penultimatey0               
-            P.objects[0].penultimatex0 = P.objects[0].finalx0 #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
-            P.objects[0].penultimatey0 = P.objects[0].finaly0 #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
-            #Record last x,y of object 0
-            P.objects[0].finalx0 = P.objects[0].pos[0] #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
-            P.objects[0].finaly0 = P.objects[0].pos[1]
-
+                #To record the penultimate position to the data file, on each pass-through, set it to final before setting final to current, so that
+                #at the last frame, final will be final
+                P.objects[0].preantepenultimatex0 = P.objects[0].antepenultimatex0
+                P.objects[0].preantepenultimatey0 = P.objects[0].antepenultimatey0
+                P.objects[0].antepenultimatex0 = P.objects[0].penultimatex0
+                P.objects[0].antepenultimatey0 = P.objects[0].penultimatey0               
+                P.objects[0].penultimatex0 = P.objects[0].finalx0 #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
+                P.objects[0].penultimatey0 = P.objects[0].finaly0 #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
+                #Record last x,y of object 0
+                P.objects[0].finalx0 = P.objects[0].pos[0] #You might think could rely on whatever the final x is, but this making sure recording the final x *drawn*
+                P.objects[0].finaly0 = P.objects[0].pos[1]
                 #But win.timeOnFlip won't work for recording a whole list or array of times because timeOnFlip can't append to an array.
                 #So for recording the interframe intervals of these times the conventional way is https://www.psychopy.org/general/timing/detectingFrameDrops.html
-            win.recordFrameIntervals = True
+                win.recordFrameIntervals = True
                 
                 #Another way is to record it directly myself
                 #https://github.com/psychopy/psychopy/blob/e45520f446697d5b5fad035fa0e4e50088ffa535/psychopy/visual/window.py
@@ -1405,7 +1354,7 @@ for thisTrial in trials:
                         noise.updateNoise()
             if (nClicks < 1):
                 win.mouseVisible = True
-                text.draw( )
+                #text.draw( )
                 xToHighlightMousePos, yToHighlightMousePos = mouse.getPos()
                 mouseHighlight.setPos([xToHighlightMousePos, yToHighlightMousePos])
                 mouseHighlight.draw( )
