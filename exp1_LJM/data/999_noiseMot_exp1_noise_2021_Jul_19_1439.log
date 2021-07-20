@@ -1,0 +1,16 @@
+9.3605 	ERROR 	Screen apparently NOT the desired resolution of 2880x1800 pixels!
+instead it is [3360 2100]
+11.1868 	WARNING 	User requested fullscreen with size [2880 1800], but screen is actually [1680, 1050]. Using actual size
+15.3643 	DATA 	Keypress: space
+15.5282 	DATA 	Keypress: space
+20.0375 	WARNING 	t of last frame was 20.58ms (=1/48)
+20.5678 	ERROR 	trialnum=0 ERROR,1 frames were longer than 19.93 ms apparently screen refreshes skipped, interframe durs were:[20.6] and was these frames: [24]
+29.7550 	WARNING 	t of last frame was 21.26ms (=1/47)
+30.3380 	ERROR 	trialnum=2 ERROR,1 frames were longer than 19.93 ms apparently screen refreshes skipped, interframe durs were:[21.3] and was these frames: [23]
+34.7546 	WARNING 	t of last frame was 21.02ms (=1/47)
+35.4716 	ERROR 	trialnum=3 ERROR,1 frames were longer than 19.93 ms apparently screen refreshes skipped, interframe durs were:[21.] and was these frames: [15]
+48.8372 	WARNING 	t of last frame was 20.52ms (=1/48)
+49.0585 	WARNING 	Multiple dropped frames have occurred - I'll stop bothering you about them!
+49.7220 	ERROR 	trialnum=6 ERROR,6 frames were longer than 19.93 ms apparently screen refreshes skipped, interframe durs were:[20.5 25.  23.5 20.1 28.5 20. ] and was these frames: [ 7 20 21 27 28 29]
+65.3312 	DATA 	Keypress: space
+75.2637 	DATA 	Keypress: escape

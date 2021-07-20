@@ -112,6 +112,10 @@ dg <-df %>%
          obj0finalY = `P.objects[0].finaly0`,
          obj0penultimateX = `P.objects[0].penultimatex0`,
          obj0penultimateY = `P.objects[0].penultimatey0`,
+         obj0preantepenultimateY = `P.objects[0].preantepenultimatey0`,
+         obj0preantepenultimateX = `P.objects[0].preantepenultimatex0`,
+         obj0antepenultimateX = `P.objects[0].antepenultimatex0`,
+         obj0antepenultimateY = `P.objects[0].antepenultimatey0`,
          timingHiccupsInLastFramesOfStimuli,
          win.nDroppedFrames,
          finalStimFrameTimes,
@@ -160,10 +164,11 @@ dhh<- dh %>% rowwise() %>% #If don't call rowwise(), have to vectorise
   mutate(avgDurLastFrames = calcAvgOfListFromPsychopy(finalStimFrameTimes) )
 
 #Calculate final velocity from penultimatex0
-dhh <- dhh %>% mutate(dx = obj0finalX - obj0penultimateX,
-                      dy = obj0finalY - obj0penultimateY)
+dhh <- dhh %>% mutate(dx = obj0finalX - obj0preantepenultimateX,
+                      dy = obj0finalY - obj0preantepenultimateY)
 dhh<- dhh %>% mutate(finalDirection = atan2(dy,dx)/pi*180)
-dhh<- dhh %>% mutate(finalSpeed =    sqrt(dx*dx + dy*dy) / (avgDurLastFrames/1000))
+#to calculate speed, divide distance travelled by 3 * interframe interval
+dhh<- dhh %>% mutate(finalSpeed =    sqrt(dx*dx + dy*dy) / (3*avgDurLastFrames/1000))
   
 #final direction
 ggplot(dhh, aes(finalDirection)) + geom_histogram()
@@ -198,8 +203,14 @@ lengthProjected <- function(u, v) {
 dhh <- dhh %>% mutate( amountExtrapolation = 
                       lengthProjected( c(xErr,yErr), c(obj0finalX,obj0finalY)    ) )
 
+#EXCLUDE OUTLIERS
+
 #plot amount of extrapolation 
 ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~.)
+
+#fix this
+ggplot(dhh, aes(x=noise_present,y=amountExtrapolation)) + geom_point() + 
+            stat_summary(fun.data = "mean_cl_boot", conf.int=95, color="red", size=1) 
 
 ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~no_targets)
 

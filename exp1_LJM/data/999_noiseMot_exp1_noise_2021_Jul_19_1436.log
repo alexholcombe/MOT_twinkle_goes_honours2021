@@ -1,0 +1,9 @@
+9.6399 	ERROR 	Screen apparently NOT the desired resolution of 2880x1800 pixels!
+instead it is [3360 2100]
+12.7657 	WARNING 	User requested fullscreen with size [2880 1800], but screen is actually [1680, 1050]. Using actual size
+17.0970 	DATA 	Keypress: space
+17.2932 	DATA 	Keypress: space
+59.0715 	WARNING 	t of last frame was 20.85ms (=1/47)
+59.1890 	WARNING 	t of last frame was 21.34ms (=1/46)
+60.0211 	ERROR 	trialnum=8 ERROR,2 frames were longer than 19.95 ms apparently screen refreshes skipped, interframe durs were:[20.8 21.3] and was these frames: [1 8]
+70.1345 	DATA 	Keypress: space
