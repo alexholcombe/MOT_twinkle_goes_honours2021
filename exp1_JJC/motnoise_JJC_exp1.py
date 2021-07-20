@@ -254,14 +254,6 @@ text = visual.TextStim(win=win, name='text',
     color='red', colorSpace='rgb', opacity=1,
     languageStyle='LTR',
     depth=-10.0);
-image = visual.ImageStim(
-    win=win,
-    name='image', 
-    image='sin', mask=None,
-    ori=0, pos=(0, 0), size=(2, 2),
-    color=[1,1,1], colorSpace='rgb', opacity=1,
-    flipHoriz=False, flipVert=False,
-    texRes=128, interpolate=True, depth=-2.0)
 
 # Initialize components for Routine "trial"
 trialClock = core.Clock()
@@ -520,7 +512,7 @@ for thisPractice_trial in practice_trials:
     # update component parameters for each repeat
     win.blendMode = 'add'
     # keep track of which components have finished
-    fixComponents = [text, image]
+    fixComponents = [text]
     for thisComponent in fixComponents:
         thisComponent.tStart = None
         thisComponent.tStop = None
@@ -560,23 +552,7 @@ for thisPractice_trial in practice_trials:
                 win.timeOnFlip(text, 'tStopRefresh')  # time at next scr refresh
                 text.setAutoDraw(False)
         win.blendMode = 'avg'
-        
-        # *image* updates
-        if image.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
-            # keep track of start time/frame for later
-            image.frameNStart = frameN  # exact frame index
-            image.tStart = t  # local t and not account for scr refresh
-            image.tStartRefresh = tThisFlipGlobal  # on global time
-            win.timeOnFlip(image, 'tStartRefresh')  # time at next scr refresh
-            image.setAutoDraw(True)
-        if image.status == STARTED:
-            # is it time to stop? (based on global clock, using actual start)
-            if tThisFlipGlobal > image.tStartRefresh + 0.5-frameTolerance:
-                # keep track of stop time/frame for later
-                image.tStop = t  # not accounting for scr refresh
-                image.frameNStop = frameN  # exact frame index
-                win.timeOnFlip(image, 'tStopRefresh')  # time at next scr refresh
-                image.setAutoDraw(False)
+
         
         # check for quit (typically the Esc key)
         if endExpNow or defaultKeyboard.getKeys(keyList=["escape"]):
@@ -611,13 +587,6 @@ for thisPractice_trial in practice_trials:
     gabor_name_pth = 'gabors/circle.png'
     
     # This is a template for one object
-#    o1 = visual.ImageStim(
-#        win=win, name='o1',units='pix', 
-#        image=gabor_name_pth, mask=None,
-#        ori=0, pos=(10000, 10000), size=(64, 64),
-#        color=[1,1,1], colorSpace='rgb', opacity=1,
-#        flipHoriz=False, flipVert=False,
-#        texRes=128, interpolate=True, depth=-1.0)
     o1 = psychopy.visual.Circle(
         win=win, name ='o1',
         units="pix",
@@ -722,7 +691,6 @@ for thisPractice_trial in practice_trials:
     
     # mark
     first_mark = 1
-    #o1.setImage(gabor_name_pth)
     # setup some python lists for storing info about the mouse
     mouse.x = []
     mouse.y = []
@@ -1179,7 +1147,7 @@ for thisTrial in trials:
     win.blendMode = 'add'
     
     # keep track of which components have finished
-    fixComponents = [text, image]
+    fixComponents = [text]
     for thisComponent in fixComponents:
         thisComponent.tStart = None
         thisComponent.tStop = None
@@ -1220,23 +1188,6 @@ for thisTrial in trials:
                 text.setAutoDraw(False)
         win.blendMode = 'avg'
         
-        # *image* updates
-        if image.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
-            # keep track of start time/frame for later
-            image.frameNStart = frameN  # exact frame index
-            image.tStart = t  # local t and not account for scr refresh
-            image.tStartRefresh = tThisFlipGlobal  # on global time
-            win.timeOnFlip(image, 'tStartRefresh')  # time at next scr refresh
-            image.setAutoDraw(True)
-        if image.status == STARTED:
-            # is it time to stop? (based on global clock, using actual start)
-            if tThisFlipGlobal > image.tStartRefresh + 0.5-frameTolerance:
-                # keep track of stop time/frame for later
-                image.tStop = t  # not accounting for scr refresh
-                image.frameNStop = frameN  # exact frame index
-                win.timeOnFlip(image, 'tStopRefresh')  # time at next scr refresh
-                image.setAutoDraw(False)
-        
         # check for quit (typically the Esc key)
         if endExpNow or defaultKeyboard.getKeys(keyList=["escape"]):
             core.quit()
@@ -1265,10 +1216,7 @@ for thisTrial in trials:
     # update component parameters for each repeat
     # probably redudndant
     win.mouseVisible = False
-    
-    # load gabor based on the used contrast
-    gabor_name_pth = 'gabors/circle.png'
-    
+        
     # This is a template for one object
     o1 = psychopy.visual.Circle(
         win=win, name ='o1',
@@ -1376,7 +1324,6 @@ for thisTrial in trials:
     
     # mark
     first_mark = 1
-    #o1.setImage(gabor_name_pth)
     # setup some python lists for storing info about the mouse
     mouse.x = []
     mouse.y = []
@@ -1403,7 +1350,6 @@ for thisTrial in trials:
     _timeToFirstFrame = win.getFutureFlipTime(clock="now")
     trialClock.reset(-_timeToFirstFrame)  # t0 is time of first possible flip
     frameN = -1
-    #trialComponents = [o1, mouse, noise, h_line, v_line, cue]
     trialComponents = [P.objects[0], mouse, noise, h_line, v_line, cue]
 
     for thisComponent in trialComponents:
