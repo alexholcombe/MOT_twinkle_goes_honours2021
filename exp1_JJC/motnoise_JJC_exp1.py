@@ -20,11 +20,10 @@ from numpy.random import random, randint, normal, shuffle, choice as randchoice
 import os, shutil  # handy system and path functions
 import sys  # to get file system encoding
 from psychopy.hardware import keyboard
-
 from datetime import datetime
 
 debug=False #Print more information to console
-autopilot=False
+autopilot=True
 demo=False
 
 # Ensure that relative paths start from the same directory as this script
@@ -1131,6 +1130,27 @@ if thisTrial != None:
     for paramName in thisTrial:
         exec('{} = thisTrial[paramName]'.format(paramName))
 
+# This is a template for one object
+o1 = psychopy.visual.Circle(
+    win=win, name ='o1',
+    units="pix",
+    radius=28, autoDraw=False,
+    fillColor=['red'],
+    lineColor=['red'], depth =-1.0)
+#Set up cage postcue that tells the participant which quadrant they need to pick a target from
+cue = visual.Rect(
+        win=win, name='cue',units='norm', size=(1, 1),
+        ori=0, pos=(0.5, 0.5),
+        lineWidth=0, lineColor=[-1,1,-1], lineColorSpace='rgb',
+        fillColor=None, fillColorSpace='rgb', autoDraw=False,
+        opacity=1, depth=-1.0, interpolate=True)
+mouseHighlight = visual.Circle(
+        win=win, name='mouseHighlight',units='pix', radius=28,
+        pos=(0, 0),
+        lineColor=None, lineColorSpace='rgb',
+        fillColor=[0.4,0.4,1], fillColorSpace='rgb', autoDraw=False,
+        opacity=0.8, depth=-1.0, interpolate=True)
+            
 for thisTrial in trials:
     mouse_reset = False
     nTargets = no_targets
@@ -1216,30 +1236,10 @@ for thisTrial in trials:
     # update component parameters for each repeat
     # probably redudndant
     win.mouseVisible = False
-        
-    # This is a template for one object
-    o1 = psychopy.visual.Circle(
-        win=win, name ='o1',
-        units="pix",
-        radius=28,
-        fillColor=['red'],
-        lineColor=['red'], depth =-1.0)
 
     o1.setAutoDraw(False) #Because copies will be made of it by Puppetteer (P), and it will draw them, so o1 is never drawn
-   
-    #Set up cage postcue that tells the participant which quadrant they need to pick a target from
-    cue = visual.Rect(
-            win=win, name='cue',units='norm', size=(1, 1),
-            ori=0, pos=(0.5, 0.5),
-            lineWidth=0, lineColor=[-1,1,-1], lineColorSpace='rgb',
-            fillColor=None, fillColorSpace='rgb', autoDraw=False,
-            opacity=1, depth=-1.0, interpolate=True)
-    mouseHighlight = visual.Circle(
-            win=win, name='mouseHighlight',units='pix', radius=28,
-            pos=(0, 0),
-            lineColor=None, lineColorSpace='rgb',
-            fillColor=[0.4,0.4,1], fillColorSpace='rgb', autoDraw=False,
-            opacity=0.8, depth=-1.0, interpolate=True)
+    cue.setAutoDraw(False)
+    mouseHighlight.setAutoDraw(False)
     
     # load trajectory from file (this was generated using motrack package
     track_filename = 'trajectories/T%03d.csv' % trajectory_id
