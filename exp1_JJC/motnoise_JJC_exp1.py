@@ -920,15 +920,6 @@ for thisPractice_trial in practice_trials:
             mouse.status = STARTED
             prevButtonState = mouse.getPressed()  # if button is down already this ISN'T a new click
             mouse.clickReset()
-        
-        # updates cue log of information when it is first drawn, and starts drawing it
-        if cue.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
-            # keep track of start time/frame for later
-            cue.frameNStart = frameN  # exact frame index
-            cue.tStart = t  # local t and not account for scr refresh
-            cue.tStartRefresh = tThisFlipGlobal  # on global time
-            win.timeOnFlip(cue, 'tStartRefresh')  # time at next scr refresh
-            cue.setAutoDraw(True)
 
         # check for quit (typically the Esc key)
         if endExpNow or defaultKeyboard.getKeys(keyList=["escape"]):
@@ -1018,8 +1009,6 @@ for thisPractice_trial in practice_trials:
     practice_trials.addData('mouse.clicked_name', mouse.clicked_name)
     practice_trials.addData('mouse.started', mouse.tStart)
     practice_trials.addData('mouse.stopped', mouse.tStop)
-    practice_trials.addData('cue.started', cue.tStartRefresh)
-    practice_trials.addData('cue.stopped', cue.tStopRefresh)
     if debug and (practice_trials.thisN==2): #Quit and Plot frame intervals
         win.close()
         plotFrameIntervals(intervals_msec)
@@ -1572,15 +1561,6 @@ for thisTrial in trials:
             mouse.status = STARTED
             prevButtonState = mouse.getPressed()  # if button is down already this ISN'T a new click
             mouse.clickReset()
-        
-        # updates cue log of information when it is first drawn, and starts drawing it
-        if cue.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
-            # keep track of start time/frame for later
-            cue.frameNStart = frameN  # exact frame index
-            cue.tStart = t  # local t and not account for scr refresh
-            cue.tStartRefresh = tThisFlipGlobal  # on global time
-            win.timeOnFlip(cue, 'tStartRefresh')  # time at next scr refresh
-            cue.setAutoDraw(True)
 
         # check for quit (typically the Esc key)
         if endExpNow or defaultKeyboard.getKeys(keyList=["escape"]):
@@ -1671,8 +1651,6 @@ for thisTrial in trials:
     trials.addData('mouse.clicked_name', mouse.clicked_name)
     trials.addData('mouse.started', mouse.tStart)
     trials.addData('mouse.stopped', mouse.tStop)
-    trials.addData('cue.started', cue.tStartRefresh)
-    trials.addData('cue.stopped', cue.tStopRefresh)
     if debug and (trials.thisN==2): #Quit and Plot frame intervals
         win.close()
         plotFrameIntervals(intervals_msec)
