@@ -138,7 +138,6 @@ if not demo and not debug: #Save a copy of the code so know exactly what the cod
 # An ExperimentHandler isn't essential but helps with data saving
 thisExp = data.ExperimentHandler(name=expName, version='',
     extraInfo=expInfo, runtimeInfo=runInfo,
-    originPath='/Users/josh/Documents/OneDrive - The University of Sydney (Students)/Empirical Thesis/Code/motNoise_forAlex/exp1/motnoise_exp1_noise_en.py',
     savePickle=True, saveWideText=True,
     dataFileName=filename)
 # save a log file for detail verbose info
