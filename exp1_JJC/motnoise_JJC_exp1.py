@@ -261,10 +261,6 @@ import motbox
 import time
 import copy
 
-# configure experiment
-#trial_length = 6 # duration of trial in seconds
-cue_time = 2     # duration of cueing phase in seconds
-
 # hide mouse cursor
 win.mouseVisible = False
 
@@ -1039,7 +1035,7 @@ t = 0
 _timeToFirstFrame = win.getFutureFlipTime(clock="now")
 before_trialsClock.reset(-_timeToFirstFrame)  # t0 is time of first possible flip
 frameN = -1
-
+cue_time = 1
 # -------Run Routine "before_trials"-------
 while continueRoutine:
     # get current time
