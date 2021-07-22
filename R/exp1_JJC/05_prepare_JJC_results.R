@@ -178,8 +178,8 @@ ggplot(dhh, aes(finalSpeed)) + geom_histogram()
 #ggplot(dhh, aes(obj0finalX)) + geom_histogram()
 
 #Calculate distance between mouse.click and target
-dhh <- dhh %>% mutate(xErr = obj0finalX - mouse.x,
-                    yErr = obj0finalY - mouse.y)
+dhh <- dhh %>% mutate(xErr = mouse.x - obj0finalX,
+                    yErr = mouse.y - obj0finalY)
 ggplot(dhh, aes(xErr,yErr)) + geom_point()
 
 #Calculate component of error relative to last direction
@@ -200,13 +200,22 @@ lengthProjected <- function(u, v) {
 #length
 
 #Calculate length projected
-dhh <- dhh %>% mutate( amountExtrapolation = 
-                      lengthProjected( c(xErr,yErr), c(obj0finalX,obj0finalY)    ) )
+dhh <- dhh %>% 
+  mutate( amountExtrapolation =  
+            lengthProjected( #We want to project the mouse response error vector onto a final direction vector
+                            c(xErr,yErr), #mouse response error vector
+                            c(cos(finalDirection/180*pi), sin(finalDirection/180*pi)) #finalDirection vector
+                                                    ) 
+          )
 
 #EXCLUDE OUTLIERS
+outlierCriterion = 150
+dhh <- dhh %>% mutate( isOutlier =  sqrt(xErr^2 + yErr^2) > outlierCriterion )
+#dhh %>% filter(isOutlier==TRUE)
 
 #plot amount of extrapolation 
-ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~.)
+ggplot(dhh %>% filter(isOutlier==FALSE), 
+       aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~.)
 
 #fix this
 ggplot(dhh, aes(x=noise_present,y=amountExtrapolation)) + geom_point() + 
@@ -216,6 +225,9 @@ ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_pres
 
 
 #Plot error data
+#https://datavizpyr.com/rain-cloud-plots-using-half-violin-plot-with-jittered-data-points-in-r/
+#Load half violin plot: geom_flat_violin()
+source("https://raw.githubusercontent.com/datavizpyr/data/master/half_flat_violinplot.R")
 
 #Calculate various distance metrics
 
