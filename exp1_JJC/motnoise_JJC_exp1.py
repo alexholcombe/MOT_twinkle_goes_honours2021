@@ -3,7 +3,7 @@
 """
 This experiment was created using PsychoPy3 Experiment Builder (v2021.1.2),
     on Mon Mar 22 11:15:44 2021
-    and then heavily modified by Alex, Liam, Josh
+    and then heavily modified by Alex, Liam, Josh https://github.com/alexholcombe/MOT_twinkle_goes_honours2021
 """
 from __future__ import absolute_import, division
 from psychopy import locale_setup
@@ -70,7 +70,6 @@ else: #checkRefreshEtc
             userProcsDetailed=True  ## if verbose and userProcsDetailed, return (command, process-ID) of the user's processes
             )
     #print(runInfo)
-    #logging.info(runInfo)
     #check screen refresh is what assuming it is ##############################################
     Hzs=list()
     myWin.flip(); myWin.flip();myWin.flip();myWin.flip();
@@ -135,14 +134,16 @@ filename = _thisDir + os.sep + u'data/%s_%s_%s' % (expInfo['participant'], expNa
 if not demo and not debug: #Save a copy of the code so know exactly what the code was for each participant
     shutil.copy2(sys.argv[0], filename + '.py') #https://stackoverflow.com/questions/123198/how-can-a-file-be-copied
 
+# save a log file with detailed verbose info such as refresh testing results and
+logFile = logging.LogFile(filename+'.log', level=logging.INFO)
+logging.console.setLevel(logging.WARNING)  # this outputs to the screen, not a file
+logging.info(runInfo) #got runInfo earlier but didn't have a logFile until now, so pushing it now
+
 # An ExperimentHandler isn't essential but helps with data saving
 thisExp = data.ExperimentHandler(name=expName, version='',
     extraInfo=expInfo, runtimeInfo=runInfo,
     savePickle=True, saveWideText=True,
     dataFileName=filename)
-# save a log file for detail verbose info
-logFile = logging.LogFile(filename+'.log', level=logging.DATA)
-logging.console.setLevel(logging.WARNING)  # this outputs to the screen, not a file
 
 endExpNow = False  # flag for 'escape' or other condition => quit the exp
 #End screen and window testing
