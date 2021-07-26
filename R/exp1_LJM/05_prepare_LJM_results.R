@@ -2,10 +2,13 @@ library(tidyverse)
 theme_set(theme_classic(16))
 
 library(here)
+library(Hmisc)
+
 source(here("utils.R"))
 
 local_data_pth <- file.path(here("..","exp1_LJM"), "data")
 #dir(local_data_pth)
+
 outpth <- here("exp1_LJM")
 
 #Get file list and sort by creation time, from most recent to oldest
@@ -101,6 +104,7 @@ dg <-df %>%
          trial = trial_id,
          trajectory_id,
          speed1 = Var1, speed2 = Var2, speed3 = Var3,
+         noise_present,
          practice_trials.thisN,
          trials.thisN,
          mouse.x.firstBadClick, mouse.y.firstBadClick,
@@ -109,21 +113,21 @@ dg <-df %>%
          obj0finalY = `P.objects[0].finaly0`,
          obj0penultimateX = `P.objects[0].penultimatex0`,
          obj0penultimateY = `P.objects[0].penultimatey0`,
+         obj0preantepenultimateX = `P.objects[0].preantepenultimatex0`,
+         obj0preantepenultimateY = `P.objects[0].preantepenultimatey0`,
+         obj0antepenultimateX = `P.objects[0].antepenultimatex0`,
+         obj0antepenultimateY = `P.objects[0].antepenultimatey0`,
          timingHiccupsInLastFramesOfStimuli,
          win.nDroppedFrames,
          finalStimFrameTimes,
          RT = mouse.time) 
 
 #Investigate the breakdown of practice and real trials
-print("Here is a table of participant number versus protocol (1 = real trials for Josh):")
-table(dg$participant,dg$protocol, useNA="always") #Because prot_id = 0 means practice trials, 1=real trials
-
-print("Here is a table of participant number versus practice trials:")
-table(dg$participant, !is.na(dg$practice_trials.thisN),
-      useNA = "always") #Because practice trials blank if not practice trial
+print("Here is a table of participant number versus protocol (1 = real trials):")
+table(dg$participant,dg$protocol) #Because prot_id = 0 means practice trials, 1=real trials
 
 #delete the practice trials
-dh <- dg %>% filter( is.na(dg$practice_trials.thisN) ) 
+dh <- dg %>% filter(protocol !=0) 
 
 #Check number of timing hiccups
 print("Here is a table of participant number versus num timing hiccups in last frames of trials:")
@@ -133,8 +137,8 @@ dh <- dh %>% mutate(anyHiccupsLastFrames = timingHiccupsInLastFramesOfStimuli > 
 
 print("For each participant num trials with hiccups in last frames, and avg missed frames in whole trial for those trials:")
 dh %>% filter( anyHiccupsLastFrames > 0)  %>% 
-  group_by(participant)  %>%
-  summarise( trialsWithHiccupsLastFrames=  n(), avgMissedFramesInWholeTrial = mean(win.nDroppedFrames) )
+       group_by(participant)  %>%
+       summarise( trialsWithHiccupsLastFrames=  n(), avgMissedFramesInWholeTrial = mean(win.nDroppedFrames) )
 #Finished timing checks
 
 #Remove trials with timingHiccupsInLastFramesOfStimuli
@@ -161,24 +165,21 @@ dhh<- dh %>% rowwise() %>% #If don't call rowwise(), have to vectorise
   mutate(avgDurLastFrames = calcAvgOfListFromPsychopy(finalStimFrameTimes) )
 
 #Calculate final velocity from penultimatex0
-dhh <- dhh %>% mutate(dx = obj0finalX - obj0penultimateX,
-                      dy = obj0finalY - obj0penultimateY)
+dhh <- dhh %>% mutate(dx = obj0finalX - obj0preantepenultimateX,
+                      dy = obj0finalY - obj0preantepenultimateY)
 dhh<- dhh %>% mutate(finalDirection = atan2(dy,dx)/pi*180)
-dhh<- dhh %>% mutate(finalSpeed =    sqrt(dx*dx + dy*dy) / (avgDurLastFrames/1000))
-
+#to calculate speed, divide distance travelled by 3 * interframe interval
+dhh<- dhh %>% mutate(finalSpeed =    sqrt(dx*dx + dy*dy) / (3*avgDurLastFrames/1000))
+  
 #final direction
 ggplot(dhh, aes(finalDirection)) + geom_histogram()
 #final speed
 ggplot(dhh, aes(finalSpeed)) + geom_histogram()
 
-#ggplot(dhh, aes(obj0finalX)) + geom_histogram()
-
 #Calculate distance between mouse.click and target
-dhh <- dhh %>% mutate(xErr = obj0finalX - mouse.x,
-                      yErr = obj0finalY - mouse.y)
+dhh <- dhh %>% mutate(xErr = mouse.x - obj0finalX,
+                    yErr = mouse.y - obj0finalY)
 ggplot(dhh, aes(xErr,yErr)) + geom_point()
-
-#Calculate various distance metrics
 
 #Calculate component of error relative to last direction
 #Project error vector onto direction vector
@@ -189,10 +190,57 @@ lengthProjected <- function(u, v) {
   #Dot product of 
   dotproduct <- (u %*% v)
   lengthOfV <- sqrt( sum(v^2) )
-  return( dotproduc / lengthOfV )
+  return( dotproduct / lengthOfV )
   #For whole vector can use the following, although I don't understand it: (as.vector( (u %*% v) / (v %*% v) ) * v)
 }
 
+#Calculate length projected, cos() and sin() are in radians
+dhh <- dhh %>%
+  mutate( amountExtrapolation =
+                      lengthProjected( #We want to project the mouse response error vector onto the final direction vector
+                      c(xErr,yErr), #mouse response error vector
+                      c(cos(finalDirection/180*pi), sin(finalDirection/180*pi)))) #finalDirection vector
+
+#EXCLUDE OUTLIERS
+outlierCriterion <- 150
+dhh <- dhh %>% mutate(isOutlier = sqrt(xErr^2+yErr^2) > outlierCriterion)
+
+#plot amount of extrapolation
+ggplot(dhh %>% filter(isOutlier==FALSE), 
+       aes(amountExtrapolation)) + geom_histogram()
+
+#plot amount of extrapolation for each possible speed for 3 final speeds
+ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(speed1~.)
+ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(speed2~.)
+ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(speed3~.)
+
+#plot effect of noise on amount of extrapolation
+ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~.)
+
+#plot interaction between noise and each possible speed for 3 final speeds
+ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~speed1)
+ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~speed2)
+ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~speed3)
+
+#fix this
+gg<- ggplot(dhh %>% filter(isOutlier==FALSE),
+      aes(x=noise_present,y=amountExtrapolation)) + geom_point() + 
+      geom_hline(yintercept=0) + 
+            stat_summary(fun.data = "mean_cl_boot", color="red", size=1) 
+show(gg)
+
+ggplot(dhh %>% filter(isOutlier==FALSE),
+       aes(x=noise_present,y=amountExtrapolation)) + geom_point() + 
+  geom_hline(yintercept=0) + 
+  stat_summary(fun.data = "mean_cl_boot", color="red", size=1) +
+  facet_grid(speed1~.)
+               
+ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~no_targets)
+
+
+#Plot error data
+
+#Calculate various distance metrics
 
 #Save data
 write_rds(dg, here("exp1","data_processed",outputFname))
