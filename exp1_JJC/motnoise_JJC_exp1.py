@@ -3,7 +3,7 @@
 """
 This experiment was created using PsychoPy3 Experiment Builder (v2021.1.2),
     on Mon Mar 22 11:15:44 2021
-    and then heavily modified by Alex, Liam, Josh https://github.com/alexholcombe/MOT_twinkle_goes_honours2021
+    and then heavily modified by Alex, Liam, Josh
 """
 from __future__ import absolute_import, division
 from psychopy import locale_setup
@@ -34,19 +34,20 @@ os.chdir(_thisDir)
 frameTolerance = 0.001  # how close to onset before 'same' frame
 refreshRatePlanningOn = 60
 
-monitorwidth = 40.5 #monitor width in cm
-viewdist = 57 #cm
+monitorwidth = 29.939 #monitor width in cm
+viewdist = 45 #cm
 scrn=0 #0 to use main screen (or second screen with mirroring), 1 to use external screen connected to computer
-widthPix = 3360
-heightPix = 2100
+widthPix = 2880
+heightPix = 1800
 bgColor = [0.004,0.004,0.004]
 fullscr = 1 #Full screen necessary for good timing
 
 #monitor characteristics
 import psychopy
 from psychopy import monitors
-monitorname = 'testmonitor'
+monitorname = 'mac13'
 waitBlank = False
+
 mon = monitors.Monitor(monitorname,width=monitorwidth, distance=viewdist)#relying on  monitorwidth cm (39 for Mitsubishi to do deg calculations) and gamma info in calibratn
 mon.setSizePix( (widthPix,heightPix) )
 
@@ -55,6 +56,7 @@ def openMyStimWindow(): #make it a function because have to do it several times,
               screen=scrn,waitBlanking=waitBlank, useFBO=True, winType='pyglet' ) #pygame doesn't work, don't know why. Works in textLocationTest.py
     return myWin
 myWin = openMyStimWindow()
+
 
 from psychopy import info #20 June 2021: psychopy.info doesn't work even though psychopy.visual does https://discourse.psychopy.org/t/psychopy-info-disappeared/23619/2
 checkRefreshEtc = True
@@ -70,6 +72,7 @@ else: #checkRefreshEtc
             userProcsDetailed=True  ## if verbose and userProcsDetailed, return (command, process-ID) of the user's processes
             )
     #print(runInfo)
+    #logging.info(runInfo)
     #check screen refresh is what assuming it is ##############################################
     Hzs=list()
     myWin.flip(); myWin.flip();myWin.flip();myWin.flip();
@@ -100,7 +103,7 @@ myWin.close() #have to close window to show dialog box
 from psychopy import __version__ # Get the PsychoPy version currently in use
 psychopyVersion = __version__
 expName = 'noiseMot_exp1_noise'  # from the Builder filename that created this script
-expInfo = {'motbox_path': '../', 'participant': '999', 'protocol': '1'}
+expInfo = {'motbox_path': '../', 'participant': '999', 'protocol': '0011'}
 
 myDlg = gui.DlgFromDict(dictionary=expInfo, sortKeys=False, title=expName, show=False)
 
@@ -134,16 +137,14 @@ filename = _thisDir + os.sep + u'data/%s_%s_%s' % (expInfo['participant'], expNa
 if not demo and not debug: #Save a copy of the code so know exactly what the code was for each participant
     shutil.copy2(sys.argv[0], filename + '.py') #https://stackoverflow.com/questions/123198/how-can-a-file-be-copied
 
-# save a log file with detailed verbose info such as refresh testing results and
-logFile = logging.LogFile(filename+'.log', level=logging.INFO)
-logging.console.setLevel(logging.WARNING)  # this outputs to the screen, not a file
-logging.info(runInfo) #got runInfo earlier but didn't have a logFile until now, so pushing it now
-
 # An ExperimentHandler isn't essential but helps with data saving
 thisExp = data.ExperimentHandler(name=expName, version='',
     extraInfo=expInfo, runtimeInfo=runInfo,
     savePickle=True, saveWideText=True,
     dataFileName=filename)
+# save a log file for detail verbose info
+logFile = logging.LogFile(filename+'.log', level=logging.CRITICAL) #CHANGE BACK
+logging.console.setLevel(logging.CRITICAL)  # this outputs to the screen, not a file
 
 endExpNow = False  # flag for 'escape' or other condition => quit the exp
 #End screen and window testing
@@ -177,7 +178,7 @@ def plotFrameIntervals(intervals_msec):
 # setup the window for the actual practice trials
 win = openMyStimWindow()
 win.setRecordFrameIntervals(False) 
-frameTimeTolerance=.1 #proportion longer than refreshRate that will not count as a miss
+frameTimeTolerance=.2 #proportion longer than refreshRate that will not count as a miss
 # Any refresh that takes longer than refreshThreshold will be considered a "dropped"
 # frame and increase the count of win.nDroppedFrames, during periods when win.recordFrameIntervals = True
 win.refreshThreshold = 1/refreshRateObserved + frameTimeTolerance*(1/refreshRateObserved)
@@ -209,7 +210,7 @@ text_3 = visual.TextStim(win=win, name='text_3',
     languageStyle='LTR',
     depth=0.0);
 
-prot_file = 'protocols/P%03d_noise.csv' % int(expInfo['protocol'])
+prot_file = 'protocols_n/P%s_noise.csv' % (expInfo['protocol'])
 key_resp_4 = keyboard.Keyboard()
 
 # Initialize components for Routine "trial"
@@ -284,17 +285,17 @@ routineTimer = core.CountdownTimer()  # to track time remaining of each (non-sli
 
 #cage lines
 h_line = visual.Line(
-    win=win, name='line',units='norm', 
-    start=(-(2, 2)[0]/2.0, 0), end=(+(2, 2)[0]/2.0, 0),
+    win=win, name='line',units='pix', 
+    start=(-widthPix/2.0, 0), end=(+widthPix/2.0, 0),
     ori=0.0, pos=(0, 0),
-    lineWidth=10.0,     colorSpace='rgb',  lineColor='black', fillColor='black',
+    lineWidth=20.0,     colorSpace='rgb',  lineColor='black', fillColor='black',
     opacity=None, depth=-3.0, interpolate=True)
 
 v_line = visual.Line(
-    win=win, name='line',units='norm', 
-    start=(-(2, 2)[0]/2.0, 0), end=(+(2, 2)[0]/2.0, 0),
-    ori=90.0, pos=(0, 0),
-    lineWidth=10.0,     colorSpace='rgb',  lineColor='black', fillColor='black',
+    win=win, name='line',units='pix', 
+    start=(0, heightPix/2.0), end=(0, -heightPix/2.0),
+    ori=0.0, pos=(0, 0),
+    lineWidth=20.0,     colorSpace='rgb',  lineColor='black', fillColor='black',
     opacity=None, depth=-3.0, interpolate=True)
 
 #noise stimulus
@@ -483,7 +484,7 @@ routineTimer.reset()
 practice_trials = data.TrialHandler(nReps=1, method='sequential', 
     extraInfo=expInfo, originPath=-1,
     #trialList=data.importConditions('protocols\\P_practice_noise.csv'),
-    trialList=data.importConditions('protocols/P_practice_noise.csv'),
+    trialList=data.importConditions('protocols_n/P_practice_noise.csv'),
     seed=None, name='practice_trials')
 thisExp.addLoop(practice_trials)  # add the loop to the experiment
 thisPractice_trial = practice_trials.trialList[0]  # so we can initialise stimuli with some values
@@ -604,7 +605,7 @@ for thisPractice_trial in practice_trials:
     o1.setAutoDraw(False) #Because copies will be made of it by Puppetteer (P), and it will draw them, so o1 is never drawn
 
     # load trajectory from file (this was generated using motrack package
-    track_filename = 'trajectories/T%03d.csv' % trajectory_id
+    track_filename = 'mac13_trajectories_500/T%03d.csv' % trajectory_id
     
     # some intitial setup
     clicked_name_correct = [];
@@ -1036,7 +1037,7 @@ t = 0
 _timeToFirstFrame = win.getFutureFlipTime(clock="now")
 before_trialsClock.reset(-_timeToFirstFrame)  # t0 is time of first possible flip
 frameN = -1
-cue_time = 1
+
 # -------Run Routine "before_trials"-------
 while continueRoutine:
     # get current time
@@ -1227,7 +1228,7 @@ for thisTrial in trials:
     mouseHighlight.setAutoDraw(False)
     
     # load trajectory from file (this was generated using motrack package
-    track_filename = 'trajectories/T%03d.csv' % trajectory_id
+    track_filename = 'mac13_trajectories_500/T%03d.csv' % trajectory_id
     
     # some intitial setup
     clicked_name_correct = [];
