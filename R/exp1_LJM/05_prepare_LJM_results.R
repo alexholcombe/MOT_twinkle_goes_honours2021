@@ -164,13 +164,12 @@ calcAvgOfListFromPsychopy <- function( listAsTextFromPsychopy ){
 dhh<- dh %>% rowwise() %>% #If don't call rowwise(), have to vectorise
   mutate(avgDurLastFrames = calcAvgOfListFromPsychopy(finalStimFrameTimes) )
 
-#Calculate final velocity from penultimatex0
+#Calculate final velocity from preantepenultimatex0
 dhh <- dhh %>% mutate(dx = obj0finalX - obj0preantepenultimateX,
                       dy = obj0finalY - obj0preantepenultimateY)
 dhh<- dhh %>% mutate(finalDirection = atan2(dy,dx)/pi*180)
-#to calculate speed, divide distance travelled by 3 * interframe interval
 dhh<- dhh %>% mutate(finalSpeed =    sqrt(dx*dx + dy*dy) / (3*avgDurLastFrames/1000))
-  
+
 #final direction
 ggplot(dhh, aes(finalDirection)) + geom_histogram()
 #final speed
@@ -193,6 +192,7 @@ lengthProjected <- function(u, v) {
   return( dotproduct / lengthOfV )
   #For whole vector can use the following, although I don't understand it: (as.vector( (u %*% v) / (v %*% v) ) * v)
 }
+
 
 #Calculate length projected, cos() and sin() are in radians
 dhh <- dhh %>%
@@ -222,7 +222,7 @@ ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_pres
 ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~speed2)
 ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~speed3)
 
-#fix this
+
 gg<- ggplot(dhh %>% filter(isOutlier==FALSE),
       aes(x=noise_present,y=amountExtrapolation)) + geom_point() + 
       geom_hline(yintercept=0) + 
