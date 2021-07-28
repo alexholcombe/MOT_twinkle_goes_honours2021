@@ -3,7 +3,7 @@
 """
 This experiment was created using PsychoPy3 Experiment Builder (v2021.1.2),
     on Mon Mar 22 11:15:44 2021
-    and then heavily modified by Alex, Liam, Josh
+    and then heavily modified by Alex, Liam, Josh https://github.com/alexholcombe/MOT_twinkle_goes_honours2021
 """
 from __future__ import absolute_import, division
 from psychopy import locale_setup
@@ -23,7 +23,7 @@ from psychopy.hardware import keyboard
 from datetime import datetime
 
 debug=False #Print more information to console
-autopilot=True
+autopilot=False
 demo=False
 
 # Ensure that relative paths start from the same directory as this script
@@ -34,19 +34,20 @@ os.chdir(_thisDir)
 frameTolerance = 0.001  # how close to onset before 'same' frame
 refreshRatePlanningOn = 60
 
-monitorwidth = 40.5 #monitor width in cm
-viewdist = 57 #cm
+monitorwidth = 29.939 #monitor width in cm
+viewdist = 45 #cm
 scrn=0 #0 to use main screen (or second screen with mirroring), 1 to use external screen connected to computer
-widthPix = 3360
-heightPix = 2100
+widthPix = 2880
+heightPix = 1800
 bgColor = [0.004,0.004,0.004]
 fullscr = 1 #Full screen necessary for good timing
 
 #monitor characteristics
 import psychopy
 from psychopy import monitors
-monitorname = 'testmonitor'
+monitorname = 'mac13'
 waitBlank = False
+
 mon = monitors.Monitor(monitorname,width=monitorwidth, distance=viewdist)#relying on  monitorwidth cm (39 for Mitsubishi to do deg calculations) and gamma info in calibratn
 mon.setSizePix( (widthPix,heightPix) )
 
@@ -55,6 +56,7 @@ def openMyStimWindow(): #make it a function because have to do it several times,
               screen=scrn,waitBlanking=waitBlank, useFBO=True, winType='pyglet' ) #pygame doesn't work, don't know why. Works in textLocationTest.py
     return myWin
 myWin = openMyStimWindow()
+
 
 from psychopy import info #20 June 2021: psychopy.info doesn't work even though psychopy.visual does https://discourse.psychopy.org/t/psychopy-info-disappeared/23619/2
 checkRefreshEtc = True
@@ -101,7 +103,7 @@ myWin.close() #have to close window to show dialog box
 from psychopy import __version__ # Get the PsychoPy version currently in use
 psychopyVersion = __version__
 expName = 'noiseMot_exp1_noise'  # from the Builder filename that created this script
-expInfo = {'motbox_path': '../', 'participant': '999', 'protocol': '1'}
+expInfo = {'motbox_path': '../', 'participant': '999', 'protocol': '0011'}
 
 myDlg = gui.DlgFromDict(dictionary=expInfo, sortKeys=False, title=expName, show=False)
 
@@ -135,14 +137,19 @@ filename = _thisDir + os.sep + u'data/%s_%s_%s' % (expInfo['participant'], expNa
 if not demo and not debug: #Save a copy of the code so know exactly what the code was for each participant
     shutil.copy2(sys.argv[0], filename + '.py') #https://stackoverflow.com/questions/123198/how-can-a-file-be-copied
 
+# save a log file with detailed verbose info such as refresh testing results and
+logFile = logging.LogFile(filename+'.log', level=logging.INFO)
+logging.console.setLevel(logging.CRITICAL)  # this outputs to the screen, not a file
+logging.info(runInfo) #got runInfo earlier but didn't have a logFile until now, so pushing it now
+
 # An ExperimentHandler isn't essential but helps with data saving
 thisExp = data.ExperimentHandler(name=expName, version='',
     extraInfo=expInfo, runtimeInfo=runInfo,
     savePickle=True, saveWideText=True,
     dataFileName=filename)
 # save a log file for detail verbose info
-logFile = logging.LogFile(filename+'.log', level=logging.DATA)
-logging.console.setLevel(logging.WARNING)  # this outputs to the screen, not a file
+logFile = logging.LogFile(filename+'.log', level=logging.CRITICAL) #CHANGE BACK
+logging.console.setLevel(logging.CRITICAL)  # this outputs to the screen, not a file
 
 endExpNow = False  # flag for 'escape' or other condition => quit the exp
 #End screen and window testing
@@ -179,7 +186,7 @@ win.setRecordFrameIntervals(False)
 frameTimeTolerance=.2 #proportion longer than refreshRate that will not count as a miss
 # Any refresh that takes longer than refreshThreshold will be considered a "dropped"
 # frame and increase the count of win.nDroppedFrames, during periods when win.recordFrameIntervals = True
-win.refreshThreshold = 1/refreshRateObserved + 0.20*(1/refreshRateObserved)
+win.refreshThreshold = 1/refreshRateObserved + frameTimeTolerance*(1/refreshRateObserved)
 # create a default keyboard (e.g. to check for escape)
 defaultKeyboard = keyboard.Keyboard()
 # Initialize components for Routine "welcome"
@@ -208,7 +215,7 @@ text_3 = visual.TextStim(win=win, name='text_3',
     languageStyle='LTR',
     depth=0.0);
 
-prot_file = 'protocols/P%03d_noise.csv' % int(expInfo['protocol'])
+prot_file = 'protocols_n/P%s_noise.csv' % (expInfo['protocol'])
 key_resp_4 = keyboard.Keyboard()
 
 # Initialize components for Routine "trial"
@@ -261,10 +268,6 @@ import motbox
 import time
 import copy
 
-# configure experiment
-#trial_length = 6 # duration of trial in seconds
-cue_time = 2     # duration of cueing phase in seconds
-
 # hide mouse cursor
 win.mouseVisible = False
 
@@ -287,17 +290,17 @@ routineTimer = core.CountdownTimer()  # to track time remaining of each (non-sli
 
 #cage lines
 h_line = visual.Line(
-    win=win, name='line',units='norm', 
-    start=(-(2, 2)[0]/2.0, 0), end=(+(2, 2)[0]/2.0, 0),
+    win=win, name='line',units='pix', 
+    start=(-widthPix/2.0, 0), end=(+widthPix/2.0, 0),
     ori=0.0, pos=(0, 0),
-    lineWidth=10.0,     colorSpace='rgb',  lineColor='black', fillColor='black',
+    lineWidth=20.0,     colorSpace='rgb',  lineColor='black', fillColor='black',
     opacity=None, depth=-3.0, interpolate=True)
 
 v_line = visual.Line(
-    win=win, name='line',units='norm', 
-    start=(-(2, 2)[0]/2.0, 0), end=(+(2, 2)[0]/2.0, 0),
-    ori=90.0, pos=(0, 0),
-    lineWidth=10.0,     colorSpace='rgb',  lineColor='black', fillColor='black',
+    win=win, name='line',units='pix', 
+    start=(0, heightPix/2.0), end=(0, -heightPix/2.0),
+    ori=0.0, pos=(0, 0),
+    lineWidth=20.0,     colorSpace='rgb',  lineColor='black', fillColor='black',
     opacity=None, depth=-3.0, interpolate=True)
 
 #noise stimulus
@@ -308,7 +311,7 @@ noise = visual.NoiseStim(
     sf=None,
     color=[1,1,1], colorSpace='rgb', opacity=None, blendmode='avg', contrast=1.0,
     texRes=128, filter=None,
-    noiseType='Uniform', noiseElementSize= (8, 8),
+    noiseType='Uniform', noiseElementSize= (4, 4),
     interpolate=False, depth=0.0, units = 'pix')
 noise.buildNoise()
 
@@ -486,7 +489,7 @@ routineTimer.reset()
 practice_trials = data.TrialHandler(nReps=1, method='sequential', 
     extraInfo=expInfo, originPath=-1,
     #trialList=data.importConditions('protocols\\P_practice_noise.csv'),
-    trialList=data.importConditions('protocols/P_practice_noise.csv'),
+    trialList=data.importConditions('protocols_n/P_practice_noise.csv'),
     seed=None, name='practice_trials')
 thisExp.addLoop(practice_trials)  # add the loop to the experiment
 thisPractice_trial = practice_trials.trialList[0]  # so we can initialise stimuli with some values
@@ -494,6 +497,28 @@ thisPractice_trial = practice_trials.trialList[0]  # so we can initialise stimul
 if thisPractice_trial != None:
     for paramName in thisPractice_trial:
         exec('{} = thisPractice_trial[paramName]'.format(paramName))
+
+#Set up cage postcue that tells the participant which quadrant they need to pick a target from
+cue = visual.Rect(
+        win=win, name='cue',units='norm', size=(1, 1),
+        ori=0, pos=(0.5, 0.5),
+        lineWidth=0, lineColor=[-1,1,-1], lineColorSpace='rgb',
+        fillColor=None, fillColorSpace='rgb', autoDraw=False,
+        opacity=1, depth=-1.0, interpolate=True)
+
+mouseHighlight = visual.Circle(
+        win=win, name='mouseHighlight',units='pix', radius=28,
+        pos=(0, 0),
+        lineColor=None, lineColorSpace='rgb',
+        fillColor=[0.4,0.4,1], fillColorSpace='rgb', autoDraw=False,
+        opacity=0.8, depth=-1.0, interpolate=True)
+
+o1 = psychopy.visual.Circle(
+    win=win, name ='o1',
+    units="pix",
+    radius=28,
+    fillColor=['red'], autoDraw = False,
+    lineColor=['red'], depth =-1.0)
 
 for thisPractice_trial in practice_trials:
     mouse_reset = False
@@ -581,34 +606,11 @@ for thisPractice_trial in practice_trials:
     # probably redudndant
     win.mouseVisible = False
     
-    # load gabor based on the used contrast
-    gabor_name_pth = 'gabors/circle.png'
-    
     # This is a template for one object
-    o1 = psychopy.visual.Circle(
-        win=win, name ='o1',
-        units="pix",
-        radius=28,
-        fillColor=['red'],
-        lineColor=['red'], depth =-1.0)
     o1.setAutoDraw(False) #Because copies will be made of it by Puppetteer (P), and it will draw them, so o1 is never drawn
-   
-    #Set up cage postcue that tells the participant which quadrant they need to pick a target from
-    cue = visual.Rect(
-            win=win, name='cue',units='norm', size=(1, 1),
-            ori=0, pos=(0.5, 0.5),
-            lineWidth=0, lineColor=[-1,1,-1], lineColorSpace='rgb',
-            fillColor=None, fillColorSpace='rgb', autoDraw=False,
-            opacity=1, depth=-1.0, interpolate=True)
-    mouseHighlight = visual.Circle(
-            win=win, name='mouseHighlight',units='pix', radius=28,
-            pos=(0, 0),
-            lineColor=None, lineColorSpace='rgb',
-            fillColor=[0.4,0.4,1], fillColorSpace='rgb', autoDraw=False,
-            opacity=0.8, depth=-1.0, interpolate=True)
 
     # load trajectory from file (this was generated using motrack package
-    track_filename = 'trajectories/T%03d.csv' % trajectory_id
+    track_filename = 'mac13_trajectories_500/T%03d.csv' % trajectory_id
     
     # some intitial setup
     clicked_name_correct = [];
@@ -858,8 +860,9 @@ for thisPractice_trial in practice_trials:
                         noise.buildNoise()
                     else:
                         noise.draw() #AOH
-                        if (frameN-noise.frameNStart) % 2 == 0:
-                            noise.updateNoise()
+                        noise.updateNoise()
+#                        if (frameN-noise.frameNStart) % 2 == 0:
+#                            noise.updateNoise()
             else:
                 noise.draw( )
             # used to highlight cages
@@ -920,15 +923,6 @@ for thisPractice_trial in practice_trials:
             mouse.status = STARTED
             prevButtonState = mouse.getPressed()  # if button is down already this ISN'T a new click
             mouse.clickReset()
-        
-        # updates cue log of information when it is first drawn, and starts drawing it
-        if cue.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
-            # keep track of start time/frame for later
-            cue.frameNStart = frameN  # exact frame index
-            cue.tStart = t  # local t and not account for scr refresh
-            cue.tStartRefresh = tThisFlipGlobal  # on global time
-            win.timeOnFlip(cue, 'tStartRefresh')  # time at next scr refresh
-            cue.setAutoDraw(True)
 
         # check for quit (typically the Esc key)
         if endExpNow or defaultKeyboard.getKeys(keyList=["escape"]):
@@ -1018,8 +1012,6 @@ for thisPractice_trial in practice_trials:
     practice_trials.addData('mouse.clicked_name', mouse.clicked_name)
     practice_trials.addData('mouse.started', mouse.tStart)
     practice_trials.addData('mouse.stopped', mouse.tStop)
-    practice_trials.addData('cue.started', cue.tStartRefresh)
-    practice_trials.addData('cue.stopped', cue.tStopRefresh)
     if debug and (practice_trials.thisN==2): #Quit and Plot frame intervals
         win.close()
         plotFrameIntervals(intervals_msec)
@@ -1241,7 +1233,7 @@ for thisTrial in trials:
     mouseHighlight.setAutoDraw(False)
     
     # load trajectory from file (this was generated using motrack package
-    track_filename = 'trajectories/T%03d.csv' % trajectory_id
+    track_filename = 'mac13_trajectories_500/T%03d.csv' % trajectory_id
     
     # some intitial setup
     clicked_name_correct = [];
@@ -1403,14 +1395,12 @@ for thisTrial in trials:
             h_line.tStart = t  # local t and not account for scr refresh
             h_line.tStartRefresh = tThisFlipGlobal  # on global time
             win.timeOnFlip(h_line, 'tStartRefresh')  # time at next scr refresh
-            #h_line.setAutoDraw(True)
             h_line.status = STARTED
             
             v_line.frameNStart = frameN  # exact frame index
             v_line.tStart = t  # local t and not account for scr refresh
             v_line.tStartRefresh = tThisFlipGlobal  # on global time
             win.timeOnFlip(v_line, 'tStartRefresh')  # time at next scr refresh
-            #v_line.setAutoDraw(True)
             v_line.status = STARTED
 
         if v_line.status == STARTED and h_line.status == STARTED:
@@ -1509,8 +1499,9 @@ for thisTrial in trials:
                         noise.buildNoise()
                     else:
                         noise.draw() #AOH
-                        if (frameN-noise.frameNStart) % 2 == 0:
-                            noise.updateNoise()
+                        noise.updateNoise()
+#                        if (frameN-noise.frameNStart) % 2 == 0:
+#                            noise.updateNoise()
             else:
                 noise.draw( )
             # used to highlight cages
@@ -1572,15 +1563,6 @@ for thisTrial in trials:
             mouse.status = STARTED
             prevButtonState = mouse.getPressed()  # if button is down already this ISN'T a new click
             mouse.clickReset()
-        
-        # updates cue log of information when it is first drawn, and starts drawing it
-        if cue.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
-            # keep track of start time/frame for later
-            cue.frameNStart = frameN  # exact frame index
-            cue.tStart = t  # local t and not account for scr refresh
-            cue.tStartRefresh = tThisFlipGlobal  # on global time
-            win.timeOnFlip(cue, 'tStartRefresh')  # time at next scr refresh
-            cue.setAutoDraw(True)
 
         # check for quit (typically the Esc key)
         if endExpNow or defaultKeyboard.getKeys(keyList=["escape"]):
@@ -1671,8 +1653,6 @@ for thisTrial in trials:
     trials.addData('mouse.clicked_name', mouse.clicked_name)
     trials.addData('mouse.started', mouse.tStart)
     trials.addData('mouse.stopped', mouse.tStop)
-    trials.addData('cue.started', cue.tStartRefresh)
-    trials.addData('cue.stopped', cue.tStopRefresh)
     if debug and (trials.thisN==2): #Quit and Plot frame intervals
         win.close()
         plotFrameIntervals(intervals_msec)

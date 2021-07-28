@@ -1,11 +1,11 @@
 #Trajectories for 8 objects in 4 cages.
 #Monitor size (1280, 1024) i.e., x: (-640, 640) y: (-512, 512)
-#Object size: 64x64
+#Object size: Radius: 28 pix
 
 setwd("~/Documents/OneDrive - The University of Sydney (Students)/Empirical Thesis/Code/motNoise_forAlex")
 
 rm(list = ls())
-set.seed(1)
+set.seed(4)
 
 library(tidyverse)
 
@@ -22,7 +22,7 @@ traj_plot_dir <- here("plots","exp1","trajectories")
 if(!dir.exists(traj_MOT_dir)) { dir.create(traj_MOT_dir, recursive = T) }
 if(!dir.exists(traj_plot_dir)) { dir.create(traj_plot_dir, recursive = T) }
 
-timeGrain <- .05 #Speed, direction are specified by R every timeGrain seconds, which gets
+timeGrain <- .01666666666666666666667 #Speed, direction are specified by R every timeGrain seconds, which gets
 #turned into a trajectory file that specifies position every timeGrain seconds
 
 sett_generate <-
@@ -31,7 +31,7 @@ sett_generate <-
 
 # they can move in a square arena, bounce off borders and other objects
 sett_move <-
-  new_settings(speed = 333, xlim = c(-640, 640), ylim = c(-512, 512),
+  new_settings(speed = 250, xlim = c(-640, 640), ylim = c(-512, 512),
                bounce_off_square = T,
                bounce_off_circle = F, circle_bounce_jitter = pi / 6, bounce_off_others = TRUE, min_distance = 64)
 # here you can separately adjust settings for visualization
@@ -42,8 +42,8 @@ sett_show$show_labels = T
 #sett_show <-
 #  new_settings(show_labels = T)
 
-# Make objects move for 8 seconds (0 to 8), adjust direction every 100 ms
-times <- seq(0, runif(1, 2, 3), by = timeGrain)
+# Make objects move for 8 seconds (0 to 8), adjust direction every timeGrain ms
+times <- seq(0, runif(1, 1.2016, 3.016), by = timeGrain)
 
 #custom cage starting coordinates
 random_coords_in_square <- function(n, xmin, xmax, ymin, ymax) {
@@ -57,7 +57,7 @@ random_coords_in_square <- function(n, xmin, xmax, ymin, ymax) {
       q = quadrant_order[i]
       
       if (q == 1) {
-        x = stats::runif(1, min = -590, max = -37) # 37 represents have object diameter (32) + half cage wall (5)
+        x = stats::runif(1, min = -590, max = -37) # 37 represents half object diameter (28) + half cage wall (5) + buffer (4)
         y = stats::runif(1, min = 37, max = 462)
       }
       else if (q ==2){
@@ -145,20 +145,20 @@ bounce_off_square <- function(moment, time_next, settings) {
   
   for (obj in seq(1,length(moment_next$x))) {
     if ((moment$x[obj] < 0) && (moment$y[obj] > 0)) {
-      cage_xlim = c(-590, -37)
-      cage_ylim = c(37, 462)
+      cage_xlim = c(-590, -50)
+      cage_ylim = c(50, 462)
     }
     if ((moment$x[obj] > 0) && (moment$y[obj]>0)) {
-      cage_xlim = c(37, 590)
-      cage_ylim = c(37, 462)
+      cage_xlim = c(50, 590)
+      cage_ylim = c(50, 462)
     }
     if ((moment$x[obj] < 0) && (moment$y[obj] < 0)) {
-      cage_xlim = c(-590, -37)
-      cage_ylim = c(-462, -37)
+      cage_xlim = c(-590, -50)
+      cage_ylim = c(-462, -50)
     }
     if ((moment$x[obj] > 0) && (moment$y[obj] < 0)) {
-      cage_xlim = c(37, 590)
-      cage_ylim = c(-462, -37)
+      cage_xlim = c(50, 590)
+      cage_ylim = c(-462, -50)
     }
     #print(cat(obj,cage_xlim))
     
@@ -332,11 +332,14 @@ step_zigzag <- function(moment, time_next, settings,
 }
 
 
-for (i in 1:2) {
+for (i in 1:912) {
   
   #print(i)
   
   position <- generate_positions_cages(8, sett_generate)
+  
+  # Make objects move for 8 seconds (0 to 8), adjust direction every timeGrain ms
+  times <- seq(0, runif(1, 1.2016, 3.016), by = timeGrain)
   
   # Object change direction randomly every 0.5-1.5 seconds
   #But each time we calculate a trajectory, we check whether it had a bounce in the last X seconds and reject it if so and calculate a different one
@@ -350,7 +353,7 @@ for (i in 1:2) {
       
     total_time_steps_needed <- length(times)
     
-    duration_of_final_interval_when_bounces_are_prohibited <- 0.20
+    duration_of_final_interval_when_bounces_are_prohibited <- 0.3
     
     steps_in_prohibited_interval <- duration_of_final_interval_when_bounces_are_prohibited/timeGrain
     if (round(steps_in_prohibited_interval) - steps_in_prohibited_interval != 0){
@@ -363,20 +366,29 @@ for (i in 1:2) {
     directions_the_same_all_times <- TRUE
     
     trajectory_duration <- tail(times,1)
+    
     #print("trajectory duration:")
     #print(trajectory_duration)
     
-    for (b in 1:8) { #step through the how_many_objects moving objects, check whether the direction is always the same for each
+    for (b in 1:1) { #step through the how_many_objects moving objects, check whether the direction is always the same for each
       #check whether there is more than one direction for this object
-      final_index_this_object <- b + 8*total_time_steps_needed - 9
-      start_time_step_of_prohibited_interval <- b + length(times)*8 - steps_in_prohibited_interval*8 - 15
+      final_index_this_object <- b + 8*total_time_steps_needed - 16
+      #print(final_index_this_object)
+      start_time_step_of_prohibited_interval <- b + length(times)*8 - steps_in_prohibited_interval*8 - 16
       idxs_this_obj_all_times_in_prohibited_interval <- seq(start_time_step_of_prohibited_interval, final_index_this_object, by=8)
       #print("b:")
       #print(b)
       
       z <- my_trajectory$moment_tbl
       
+      #all_directions <- z$direction[idxs_this_obj_all_times_in_prohibited_interval]
+      #print("All directions:")
+      #print(all_directions)
+      
       directions <- unique(z$direction[idxs_this_obj_all_times_in_prohibited_interval])
+      
+      #print("Unique directions:")
+      #print(directions)
 
       if (length(directions) > 1) {
         directions_the_same_all_times <- FALSE
@@ -387,13 +399,16 @@ for (i in 1:2) {
     changed_direction_in_final_interval <- !directions_the_same_all_times
     attempts <- attempts + 1
     #print("attempts")
-    print(attempts)
+    #print(attempts)
   } #end while loop running to get a trajectory that doesnt have a bounce in the final portions
     trajectory_z <- my_trajectory$moment_tbl
     trajectory_last <- trajectory_z[start_time_step_of_prohibited_interval : nrow(trajectory_z), ]
 
   if (attempts==max_attempts)
     print("Sorry, could not generate a trajectory without a bounce in the prohibited final interval")
+  
+  #print("NEW TRAJECTORY")
+  print(i)
   
   save_trajectory(trajectory_z,filename = file.path(traj_MOT_dir,sprintf("T%03d.csv",i)))
   p <- plot_trajectory(trajectory_z, targets = 1:4, sett_show)

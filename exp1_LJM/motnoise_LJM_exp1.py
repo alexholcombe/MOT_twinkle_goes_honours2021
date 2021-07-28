@@ -232,7 +232,7 @@ mouse.mouseClock = core.Clock()
 # Initialize components for Routine "before_trials"
 before_trialsClock = core.Clock()
 text_5 = visual.TextStim(win=win, name='text_5',
-    text='Now the actual experiment begins\n\n\n\n\nPress space',
+    text='Signal to the experimenter when you are ready to begin the real trials.',
     font='Arial',
     pos=(0, 0), height=20, wrapWidth=None, ori=0, 
     color='white', colorSpace='rgb', opacity=1, 
@@ -289,7 +289,7 @@ noise = visual.NoiseStim(
     sf=None,
     color=[1,1,1], colorSpace='rgb', opacity=None, blendmode='avg', contrast=1.0,
     texRes=128, filter=None,
-    noiseType='Uniform', noiseElementSize= (6, 6),
+    noiseType='Uniform', noiseElementSize= (8, 8),
     interpolate=False, depth=0.0, units = 'pix')
 noise.buildNoise()
 
@@ -487,13 +487,6 @@ o1.setAutoDraw(False) #Because copies will be made of it by Puppetteer (P), and 
 
 # and circular highlighting
 # this is related to current experiment (see poster)
-cue = visual.Rect(
-    win=win, name='cue',units='norm', 
-    size=(1, 1),
-    ori=0, pos=(0.5, 0.5),
-    lineWidth=0, lineColor=[-1,1,-1], lineColorSpace='rgb',
-    fillColor=None, fillColorSpace='rgb', autoDraw=False,
-    opacity=1, depth=-1.0, interpolate=True)
 mouseHighlight = visual.Circle(
         win=win, name='mouseHighlight',units='pix', radius=28,
         pos=(0, 0),
@@ -649,7 +642,8 @@ for thisPractice_trial in practice_trials:
     gotValidClick = False  # until a click is received
     mouse.mouseClock.reset()
     # keep track of which components have finished
-    trialComponents = [P.objects[0], mouse, cue, noise]
+#    trialComponents = [P.objects[0], mouse, cue, noise]
+    trialComponents = [P.objects[0], mouse, noise]
     for thisComponent in trialComponents:
         thisComponent.tStart = None
         thisComponent.tStop = None
@@ -696,7 +690,7 @@ for thisPractice_trial in practice_trials:
         
         noise.draw( )
         o1.setAutoDraw(False)
-        cue.setAutoDraw(False)
+        #cue.setAutoDraw(False)
         # cueing of the targets phase at beginning of trial
         if t >= 0 and t <= cue_time:
             text.draw( )
@@ -773,19 +767,24 @@ for thisPractice_trial in practice_trials:
             if mouse_reset == False :
                 mouse.setPos((0,0))
                 mouse_reset = True
-            if noise.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
-                noise.frameNStart = frameN  # exact frame index
-                noise.tStart = t  # local t and not account for scr refresh
-                noise.tStartRefresh = tThisFlipGlobal  # on global time, but not as accurate as win.time so overrule it in next line with that
-                win.timeOnFlip(noise, 'tStartRefresh')  # time at next scr refresh
-                noise.status = STARTED
-            if noise.status == STARTED:
-                if noise._needBuild:
-                    noise.buildNoise()
-                else:
-                    noise.draw()
-                    if (frameN-noise.frameNStart) %     2==0:
-                        noise.updateNoise()
+            if noise_present == 'noise' :
+                if noise.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
+                # keep track of start time/frame for later
+                    noise.frameNStart = frameN  # exact frame index
+                    noise.tStart = t  # local t and not account for scr refresh
+                    noise.tStartRefresh = tThisFlipGlobal  # on global time, but not as accurate as win.time so overrule it in next line with that
+                    win.timeOnFlip(noise, 'tStartRefresh')  # time at next scr refresh
+                    noise.status = STARTED #AOH
+
+                if noise.status == STARTED:
+                    if noise._needBuild:
+                        noise.buildNoise()
+                    else:
+                        noise.draw() #AOH
+                        if (frameN-noise.frameNStart) % 2 == 0:
+                            noise.updateNoise()
+            else:
+                noise.draw( )
             if (nClicks < 1):
                 win.mouseVisible = True
                 xToHighlightMousePos, yToHighlightMousePos = mouse.getPos()
@@ -829,13 +828,13 @@ for thisPractice_trial in practice_trials:
             prevButtonState = mouse.getPressed()  # if button is down already this ISN'T a new click
             mouse.clickReset()
         # updates cue log of information when it is first drawn, and starts drawing it
-        if cue.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
-            # keep track of start time/frame for later
-            cue.frameNStart = frameN  # exact frame index
-            cue.tStart = t  # local t and not account for scr refresh
-            cue.tStartRefresh = tThisFlipGlobal  # on global time
-            win.timeOnFlip(cue, 'tStartRefresh')  # time at next scr refresh
-            cue.setAutoDraw(True)
+#        if cue.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
+#            # keep track of start time/frame for later
+#            cue.frameNStart = frameN  # exact frame index
+#            cue.tStart = t  # local t and not account for scr refresh
+#            cue.tStartRefresh = tThisFlipGlobal  # on global time
+#            win.timeOnFlip(cue, 'tStartRefresh')  # time at next scr refresh
+#            cue.setAutoDraw(True)
         
         # check for quit (typically the Esc key)
         if endExpNow or defaultKeyboard.getKeys(keyList=["escape"]):
@@ -925,8 +924,8 @@ for thisPractice_trial in practice_trials:
     practice_trials.addData('mouse.clicked_name', mouse.clicked_name)
     practice_trials.addData('mouse.started', mouse.tStart)
     practice_trials.addData('mouse.stopped', mouse.tStop)
-    practice_trials.addData('cue.started', cue.tStartRefresh)
-    practice_trials.addData('cue.stopped', cue.tStopRefresh)
+#    practice_trials.addData('cue.started', cue.tStartRefresh)
+#    practice_trials.addData('cue.stopped', cue.tStopRefresh)
     if debug and (practice_trials.thisN==2): #Quit and Plot frame intervals
         win.close()
         plotFrameIntervals(intervals_msec)
@@ -993,7 +992,7 @@ while continueRoutine:
         win.callOnFlip(key_resp_2.clock.reset)  # t=0 on next screen flip
         win.callOnFlip(key_resp_2.clearEvents, eventType='keyboard')  # clear events on next screen flip
     if key_resp_2.status == STARTED and not waitOnFlip:
-        theseKeys = key_resp_2.getKeys(keyList=['space'], waitRelease=False)
+        theseKeys = key_resp_2.getKeys(keyList=['y'], waitRelease=False)
         _key_resp_2_allKeys.extend(theseKeys)
         if len(_key_resp_2_allKeys):
             key_resp_2.keys = _key_resp_2_allKeys[-1].name  # just the last key pressed
@@ -1339,19 +1338,24 @@ for thisTrial in trials:
             if mouse_reset == False :
               mouse.setPos((0,0))
             mouse_reset = True
-            if noise.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
-                noise.frameNStart = frameN  # exact frame index
-                noise.tStart = t  # local t and not account for scr refresh
-                noise.tStartRefresh = tThisFlipGlobal  # on global time
-                win.timeOnFlip(noise, 'tStartRefresh')  # time at next scr refresh
-                noise.status = STARTED
-            if noise.status == STARTED:
-                if noise._needBuild:
-                    noise.buildNoise()
-                else:
-                    noise.draw()
-                    if (frameN-noise.frameNStart) %     2==0:
-                        noise.updateNoise()
+            if noise_present == 'noise' :
+                if noise.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
+                # keep track of start time/frame for later
+                    noise.frameNStart = frameN  # exact frame index
+                    noise.tStart = t  # local t and not account for scr refresh
+                    noise.tStartRefresh = tThisFlipGlobal  # on global time, but not as accurate as win.time so overrule it in next line with that
+                    win.timeOnFlip(noise, 'tStartRefresh')  # time at next scr refresh
+                    noise.status = STARTED #AOH
+
+                if noise.status == STARTED:
+                    if noise._needBuild:
+                        noise.buildNoise()
+                    else:
+                        noise.draw() #AOH
+                        if (frameN-noise.frameNStart) % 2 == 0:
+                            noise.updateNoise()
+            else:
+                noise.draw( )
             if (nClicks < 1):
                 win.mouseVisible = True
                 #text.draw( )
