@@ -232,7 +232,7 @@ mouse.mouseClock = core.Clock()
 # Initialize components for Routine "before_trials"
 before_trialsClock = core.Clock()
 text_5 = visual.TextStim(win=win, name='text_5',
-    text='Now the actual experiment begins\n\n\n\n\nPress space',
+    text='Signal to the experimenter when you are ready to begin the real trials.',
     font='Arial',
     pos=(0, 0), height=20, wrapWidth=None, ori=0, 
     color='white', colorSpace='rgb', opacity=1, 
@@ -992,7 +992,7 @@ while continueRoutine:
         win.callOnFlip(key_resp_2.clock.reset)  # t=0 on next screen flip
         win.callOnFlip(key_resp_2.clearEvents, eventType='keyboard')  # clear events on next screen flip
     if key_resp_2.status == STARTED and not waitOnFlip:
-        theseKeys = key_resp_2.getKeys(keyList=['space'], waitRelease=False)
+        theseKeys = key_resp_2.getKeys(keyList=['y'], waitRelease=False)
         _key_resp_2_allKeys.extend(theseKeys)
         if len(_key_resp_2_allKeys):
             key_resp_2.keys = _key_resp_2_allKeys[-1].name  # just the last key pressed
