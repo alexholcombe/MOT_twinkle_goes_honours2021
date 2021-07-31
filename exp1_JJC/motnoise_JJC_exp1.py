@@ -23,7 +23,7 @@ from psychopy.hardware import keyboard
 from datetime import datetime
 
 debug=False #Print more information to console
-autopilot=False
+autopilot=True
 demo=False
 
 # Ensure that relative paths start from the same directory as this script
@@ -122,7 +122,9 @@ myDlg.show()
 
 if myDlg.OK == False:
     core.quit()  # user pressed cancel
-
+if expInfo['protocol'] == '':
+    print('No protocol number entered!'.upper())
+    core.quit()
 if refreshRateWrong:
     logging.error(refreshMsg1+refreshMsg2)
 else: logging.info(refreshMsg1+refreshMsg2)
