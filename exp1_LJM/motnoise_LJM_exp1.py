@@ -103,7 +103,7 @@ myWin.close() #have to close window to show dialog box
 from psychopy import __version__ # Get the PsychoPy version currently in use
 psychopyVersion = __version__
 expName = 'noiseMot_exp1_noise'  # from the Builder filename that created this script
-expInfo = {'motbox_path': '../', 'participant': '999', 'protocol': '1'}
+expInfo = {'motbox_path': '../', 'participant': '999', 'protocol': ''}
 
 myDlg = gui.DlgFromDict(dictionary=expInfo, sortKeys=False, title=expName, show=False)
 
@@ -122,7 +122,9 @@ myDlg.show()
 
 if myDlg.OK == False:
     core.quit()  # user pressed cancel
-
+if expInfo['protocol'] == '':
+    print('No protocol number entered!'.upper())
+    core.quit()
 if refreshRateWrong:
     logging.error(refreshMsg1+refreshMsg2)
 else: logging.info(refreshMsg1+refreshMsg2)
