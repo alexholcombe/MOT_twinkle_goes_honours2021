@@ -1482,6 +1482,8 @@ for thisTrial in trials:
         print('Frame times up to stimuli cessation according to win.frameIntervals=', intervals_msec_last_thistrial)
         print('In last',numOfFinalFramesToRecord,' frames across all trials ', win.nDroppedFrames, ' frames were dropped according to nDroppedFrames.')
     trials.addData('finalStimFrameTimes',intervals_msec_last_thistrial)
+    worstLastFramesDur = max(intervals_msec_last_thistrial)
+    trials.addData('worstLastFramesDur',worstLastFramesDur)
     #Count the number of timing hiccups and print out and save to log some information about them
     longFrameLimit = np.round(1000/refreshRateObserved*(1.0+frameTimeTolerance),2)
     idxsInterframeLong = np.where( np.array(intervals_msec_last_thistrial) > longFrameLimit ) [0] #frames that exceeded frameTimeTolerance of expected duration
