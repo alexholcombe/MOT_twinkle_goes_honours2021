@@ -533,77 +533,6 @@ if expInfo['protocol'] == '101' or expInfo['protocol'] == '201' or expInfo['prot
             for paramName in thisPractice_trial:
                 exec('{} = thisPractice_trial[paramName]'.format(paramName))
         
-        # ------Prepare to start Routine "fix"-------
-        continueRoutine = True
-        routineTimer.add(0.500000)
-        # update component parameters for each repeat
-        win.blendMode = 'add'
-        # keep track of which components have finished
-        fixComponents = [text]
-        for thisComponent in fixComponents:
-            thisComponent.tStart = None
-            thisComponent.tStop = None
-            thisComponent.tStartRefresh = None
-            thisComponent.tStopRefresh = None
-            if hasattr(thisComponent, 'status'):
-                thisComponent.status = NOT_STARTED
-        # reset timers
-        t = 0
-        _timeToFirstFrame = win.getFutureFlipTime(clock="now")
-        fixClock.reset(-_timeToFirstFrame)  # t0 is time of first possible flip
-        frameN = -1
-        
-        # -------Run Routine "fix"-------
-        while continueRoutine and routineTimer.getTime() > 0:
-            # get current time
-            t = fixClock.getTime()
-            tThisFlip = win.getFutureFlipTime(clock=fixClock)
-            tThisFlipGlobal = win.getFutureFlipTime(clock=None)
-            frameN = frameN + 1  # number of completed frames (so 0 is the first frame)
-            # update/draw components on each frame
-            
-            # *text* updates
-            if text.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
-                # keep track of start time/frame for later
-                text.frameNStart = frameN  # exact frame index
-                text.tStart = t  # local t and not account for scr refresh
-                text.tStartRefresh = tThisFlipGlobal  # on global time
-                win.timeOnFlip(text, 'tStartRefresh')  # time at next scr refresh
-                text.setAutoDraw(True)
-            if text.status == STARTED:
-                # is it time to stop? (based on global clock, using actual start)
-                if tThisFlipGlobal > text.tStartRefresh + 0.5-frameTolerance:
-                    # keep track of stop time/frame for later
-                    text.tStop = t  # not accounting for scr refresh
-                    text.frameNStop = frameN  # exact frame index
-                    win.timeOnFlip(text, 'tStopRefresh')  # time at next scr refresh
-                    text.setAutoDraw(False)
-            win.blendMode = 'avg'
-    
-            
-            # check for quit (typically the Esc key)
-            if endExpNow or defaultKeyboard.getKeys(keyList=["escape"]):
-                core.quit()
-            
-            # check if all components have finished
-            if not continueRoutine:  # a component has requested a forced-end of Routine
-                break
-            continueRoutine = False  # will revert to True if at least one component still running
-            for thisComponent in fixComponents:
-                if hasattr(thisComponent, "status") and thisComponent.status != FINISHED:
-                    continueRoutine = True
-                    break  # at least one component has not yet finished
-            
-            # refresh the screen
-            if continueRoutine:  # don't flip if this routine is over or we'll get a blank screen
-                win.flip()
-        
-        # -------Ending Routine "fix"-------
-        for thisComponent in fixComponents:
-            if hasattr(thisComponent, "setAutoDraw"):
-                thisComponent.setAutoDraw(False)
-        win.blendMode = 'avg'
-        
         # ------Prepare to start Routine "trial"-------
         continueRoutine = True
         # update component parameters for each repeat
@@ -725,17 +654,16 @@ if expInfo['protocol'] == '101' or expInfo['protocol'] == '201' or expInfo['prot
         P.objects[0].antepenultimatey0 = -999 #this is just for recording the antepenultimate position to the data file
         P.objects[0].preantepenultimatex0 = -999 #this is just for recording the preantepenultimate position to the data file
         P.objects[0].preantepenultimatey0 = -999 #this is just for recording the preantepenultimate position to the data file
+        time.sleep(0.2)
         # reset timers
         t = 0
         _timeToFirstFrame = win.getFutureFlipTime(clock="now")
         trialClock.reset(-_timeToFirstFrame)  # t0 is time of first possible flip
         frameN = -1
-        #Set up a list of times of the last frames, so can check for timing hiccups
-        #lastFrameTimes = list()
         finishedCriticalStimuli = False
+        text.height = 100
         # -------Run Routine "trial"-------
         while continueRoutine:
-            text.height = 100
             # get current time
             t = trialClock.getTime()
             tThisFlip = win.getFutureFlipTime(clock=trialClock)
@@ -909,7 +837,7 @@ if expInfo['protocol'] == '101' or expInfo['protocol'] == '201' or expInfo['prot
                     continueRoutine = False
                     for i2 in range(n_objects):
                         P.objects[i2].setAutoDraw(False)
-                    time.sleep(0.3) 
+                    time.sleep(0.05) 
             
             # *o1* updates
             if P.objects[0].status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
@@ -978,6 +906,8 @@ if expInfo['protocol'] == '101' or expInfo['protocol'] == '201' or expInfo['prot
             print('Frame times up to stimuli cessation according to win.frameIntervals=', intervals_msec_last_thistrial)
             print('In last',numOfFinalFramesToRecord,' frames across all trials ', win.nDroppedFrames, ' frames were dropped according to nDroppedFrames.')
         practice_trials.addData('finalStimFrameTimes',intervals_msec_last_thistrial)
+        worstLastFramesDur = max(intervals_msec_last_thistrial)
+        practice_trials.addData('worstLastFramesDur',worstLastFramesDur)
         #Count the number of timing hiccups and print out and save to log some information about them
         longFrameLimit = np.round(1000/refreshRateObserved*(1.0+frameTimeTolerance),2)
         idxsInterframeLong = np.where( np.array(intervals_msec_last_thistrial) > longFrameLimit ) [0] #frames that exceeded frameTimeTolerance of expected duration
@@ -1155,75 +1085,7 @@ for thisTrial in trials:
         for paramName in thisTrial:
             exec('{} = thisTrial[paramName]'.format(paramName))
     
-    # ------Prepare to start Routine "fix"-------
-    continueRoutine = True
-    routineTimer.add(0.500000)
-    # update component parameters for each repeat
-    win.blendMode = 'add'
-    
-    # keep track of which components have finished
-    fixComponents = [text]
-    for thisComponent in fixComponents:
-        thisComponent.tStart = None
-        thisComponent.tStop = None
-        thisComponent.tStartRefresh = None
-        thisComponent.tStopRefresh = None
-        if hasattr(thisComponent, 'status'):
-            thisComponent.status = NOT_STARTED
-    # reset timers
-    t = 0
-    _timeToFirstFrame = win.getFutureFlipTime(clock="now")
-    fixClock.reset(-_timeToFirstFrame)  # t0 is time of first possible flip
     frameN = -1
-    
-    # -------Run Routine "fix"-------
-    while continueRoutine and routineTimer.getTime() > 0:
-        # get current time
-        t = fixClock.getTime()
-        tThisFlip = win.getFutureFlipTime(clock=fixClock)
-        tThisFlipGlobal = win.getFutureFlipTime(clock=None)
-        frameN = frameN + 1  # number of completed frames (so 0 is the first frame)
-        # update/draw components on each frame
-        
-        # *text* updates
-        if text.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
-            # keep track of start time/frame for later
-            text.frameNStart = frameN  # exact frame index
-            text.tStart = t  # local t and not account for scr refresh
-            text.tStartRefresh = tThisFlipGlobal  # on global time
-            win.timeOnFlip(text, 'tStartRefresh')  # time at next scr refresh
-            text.setAutoDraw(True)
-        if text.status == STARTED:
-            # is it time to stop? (based on global clock, using actual start)
-            if tThisFlipGlobal > text.tStartRefresh + 0.5-frameTolerance:
-                # keep track of stop time/frame for later
-                text.tStop = t  # not accounting for scr refresh
-                text.frameNStop = frameN  # exact frame index
-                win.timeOnFlip(text, 'tStopRefresh')  # time at next scr refresh
-                text.setAutoDraw(False)
-        win.blendMode = 'avg'
-        
-        # check for quit (typically the Esc key)
-        if endExpNow or defaultKeyboard.getKeys(keyList=["escape"]):
-            core.quit()
-        
-        # check if all components have finished
-        if not continueRoutine:  # a component has requested a forced-end of Routine
-            break
-        continueRoutine = False  # will revert to True if at least one component still running
-        for thisComponent in fixComponents:
-            if hasattr(thisComponent, "status") and thisComponent.status != FINISHED:
-                continueRoutine = True
-                break  # at least one component has not yet finished
-        
-        # refresh the screen
-        if continueRoutine:  # don't flip if this routine is over or we'll get a blank screen
-            win.flip()
-    
-    # -------Ending Routine "fix"-------
-    for thisComponent in fixComponents:
-        if hasattr(thisComponent, "setAutoDraw"):
-            thisComponent.setAutoDraw(False)
     win.blendMode = 'avg'
     
     # ------Prepare to start Routine "trial"-------
@@ -1340,6 +1202,7 @@ for thisTrial in trials:
         thisComponent.tStopRefresh = None
         if hasattr(thisComponent, 'status'):
             thisComponent.status = NOT_STARTED
+    time.sleep(.2) #let computer do other stuff it needs to do
     # reset timers
     t = 0
     _timeToFirstFrame = win.getFutureFlipTime(clock="now")
@@ -1549,7 +1412,7 @@ for thisTrial in trials:
                     #P.objects[i2].mmark.setAutoDraw(False)
                     P.objects[i2].setAutoDraw(False)
                 #noise_backg.setAutoDraw(False)
-                time.sleep(0.3) 
+                time.sleep(0.05) 
         
         # *o1* updates
         if P.objects[0].status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
