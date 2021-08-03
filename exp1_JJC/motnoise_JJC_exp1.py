@@ -118,6 +118,13 @@ if checkRefreshEtc and (myWinRes != [widthPix,heightPix]).any():
     myDlg.addText(msgWrongResolution, color='Red')
     logging.error(msgWrongResolution)
 myDlg.addText('Note: to abort press ESC at a trials response screen', color=dimGreyForDlgBox) 
+
+flaggedProcessesMsg = False
+if runInfo['systemUserProcFlagged'] is not None:
+    if len(runInfo['systemUserProcFlagged']):
+        flaggedProcessesMsg = 'Other programs running: (command, process-ID)' + str(runInfo['systemUserProcFlagged'])
+if flaggedProcessesMsg:
+    myDlg.addText(flaggedProcessesMsg, color='Red')
 myDlg.show()    
 
 if myDlg.OK == False:
@@ -232,7 +239,7 @@ nTargets = 4 # number of targets (that will be highlighted in cue phase)
 n_objects = 8 # number of objects (could be loaded automatically from file
 
 # configure experiment
-cue_time = 2     # duration of cueing phase in seconds
+cue_time = 1  # duration of cueing phase in seconds
 
 # hide mouse cursor
 win.mouseVisible = False
