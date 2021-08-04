@@ -322,6 +322,8 @@ if expInfo['protocol'] == '101' or expInfo['protocol'] == '201' or expInfo['prot
     _timeToFirstFrame = win.getFutureFlipTime(clock="now")
     welcomeClock.reset(-_timeToFirstFrame)  # t0 is time of first possible flip
     frameN = -1
+    if endExpNow or defaultKeyboard.getKeys(keyList=["escape"]):
+        core.quit()
     
     # -------Run Routine "welcome"-------
     while continueRoutine:
@@ -1113,7 +1115,9 @@ for thisTrial in trials:
     trialClock.reset(-_timeToFirstFrame)  # t0 is time of first possible flip
     frameN = -1
     finishedCriticalStimuli = False
-    
+    if endExpNow or defaultKeyboard.getKeys(keyList=["escape"]):
+        core.quit()
+
     # -------Run Routine "trial"-------
     while continueRoutine:
         # get current time
