@@ -994,28 +994,6 @@ for thisTrial in trials:
     if thisTrial != None:
         for paramName in thisTrial:
             exec('{} = thisTrial[paramName]'.format(paramName))
-    pctTrialsCompletedForBreak = np.array([.6,.8])  
-    breakTrials = np.round(trials.nTotal*pctTrialsCompletedForBreak)
-    timeForTrialsRemainingMsg = np.any(trials.thisN==breakTrials)
-    if timeForTrialsRemainingMsg :
-        pctDone = round(    (1.0*trials.thisN) / (1.0*trials.nTotal)*100,  0  )
-        text_5.setText('Press "SPACE" to continue!')
-        text_5.draw()
-        progressMsg = 'Completed ' + str(trials.thisN) + ' of ' + str(trials.nTotal) + ' trials'  #EVA if this doesn't work, change it to progressMsg = ' '
-        text_3.setText(progressMsg)
-        text_3.draw()
-        myWin.flip() # myWin.flip(clearBuffer=True) 
-        waiting=True
-        expStop = False
-        while waiting:
-            if autopilot: break
-            elif expStop == True:break
-            for key in event.getKeys():      #check if pressed abort-type key
-                if key in ['space','ESCAPE']: 
-                    waiting=False
-                if key in ['ESCAPE']:
-                    expStop = False
-        myWin.clearBuffer()
     frameN = -1
     win.blendMode = 'avg'
  
