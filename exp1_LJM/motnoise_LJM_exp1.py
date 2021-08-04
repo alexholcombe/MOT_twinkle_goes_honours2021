@@ -36,7 +36,7 @@ os.chdir(_thisDir)
 frameTolerance = 0.001  # how close to onset before 'same' frame
 refreshRatePlanningOn = 60
 
-monitorwidth = 40.5 #monitor width in cm
+monitorwidth = 28.5 #monitor width in cm
 viewdist = 57 #cm
 scrn=0 #0 to use main screen (or second screen with mirroring), 1 to use external screen connected to computer
 widthPix = 2880
@@ -731,10 +731,9 @@ if expInfo['protocol'] == '101' or expInfo['protocol'] == '201' or expInfo['prot
                     continueRoutine = False
                     for i2 in range(n_objects):
                         P.objects[i2].setAutoDraw(False)
+                    thisExp.saveAsWideText(filename+'.csv', fileCollisionMethod='overwrite',delim='auto') 
                     #noise_backg.setAutoDraw(False)
-                    time.sleep(0.05) 
-            
-            
+                    time.sleep(0.05)
             
             # *o1* updates
             if P.objects[0].status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
@@ -1228,6 +1227,7 @@ for thisTrial in trials:
                 for i2 in range(n_objects):
                     P.objects[i2].setAutoDraw(False)
                 #noise_backg.setAutoDraw(False)
+                #thisExp.saveAsWideText(filename+'.csv', fileCollisionMethod='overwrite',delim='auto')
                 time.sleep(0.05) 
         
         
@@ -1432,7 +1432,6 @@ for thisComponent in byeComponents:
 win.flip()
 
 # these shouldn't be strictly necessary (should auto-save)
-thisExp.saveAsWideText(filename+'.csv', delim='auto')
 thisExp.saveAsPickle(filename)
 logging.flush()
 # make sure everything is closed down
