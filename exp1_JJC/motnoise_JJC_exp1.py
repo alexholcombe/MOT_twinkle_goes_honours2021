@@ -192,7 +192,7 @@ def plotFrameIntervals(intervals_msec):
 # setup the window for the actual practice trials
 win = openMyStimWindow()
 win.setRecordFrameIntervals(False) 
-frameTimeTolerance=.1 #proportion longer than refreshRate that will not count as a miss
+frameTimeTolerance=.2 #proportion longer than refreshRate that will not count as a miss
 # Any refresh that takes longer than refreshThreshold will be considered a "dropped"
 # frame and increase the count of win.nDroppedFrames, during periods when win.recordFrameIntervals = True
 win.refreshThreshold = 1/refreshRateObserved + frameTimeTolerance*(1/refreshRateObserved)
@@ -377,6 +377,9 @@ if expInfo['protocol'] == '101' or expInfo['protocol'] == '201' or expInfo['prot
         tThisFlipGlobal = win.getFutureFlipTime(clock=None)
         frameN = frameN + 1  # number of completed frames (so 0 is the first frame)
         # update/draw components on each frame
+        
+        if endExpNow or defaultKeyboard.getKeys(keyList=["escape"]):
+            core.quit()
         
         # *text_2* updates
         if text_2.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
@@ -1093,6 +1096,8 @@ for thisTrial in trials:
             exec('{} = thisTrial[paramName]'.format(paramName))
     
     frameN = -1
+    if endExpNow or defaultKeyboard.getKeys(keyList=["escape"]):
+        core.quit()
     win.blendMode = 'avg'
     
     # ------Prepare to start Routine "trial"-------
