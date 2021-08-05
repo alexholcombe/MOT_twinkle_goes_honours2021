@@ -25,7 +25,7 @@ from psychopy.hardware import keyboard
 from datetime import datetime
 
 debug=False #Print more information to console
-autopilot=False
+autopilot=True
 demo=False
 
 # Ensure that relative paths start from the same directory as this script
@@ -1205,7 +1205,7 @@ for thisTrial in trials:
                 for i2 in range(n_objects):
                     P.objects[i2].setAutoDraw(False)
                 #noise_backg.setAutoDraw(False)
-                #thisExp.saveAsWideText(filename+'.csv', fileCollisionMethod='overwrite',delim='auto')
+                thisExp.saveAsWideText(filename+'.csv', fileCollisionMethod='overwrite',delim='auto')
                 time.sleep(0.05) 
         
         
