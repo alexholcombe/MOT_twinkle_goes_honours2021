@@ -185,6 +185,10 @@ dhh <- dhh %>% mutate(isOutlier = sqrt(xErr^2+yErr^2) > outlierCriterion)
 ggplot(dhh %>% filter(isOutlier==FALSE), 
        aes(amountExtrapolation)) + geom_histogram()
 
+#https://datavizpyr.com/rain-cloud-plots-using-half-violin-plot-with-jittered-data-points-in-r/
+#Load half violin plot: geom_flat_violin()
+source("https://raw.githubusercontent.com/datavizpyr/data/master/half_flat_violinplot.R")
+
 #plot amount of extrapolation for each possible speed for 3 final speeds
 ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(first_speed~.)
 ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(final_speed~.)
@@ -198,13 +202,17 @@ ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_pres
 ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~final_speed)
 
 gg<- ggplot(dhh %>% filter(isOutlier==FALSE),
-       aes(x=noise_present,y=amountExtrapolation)) + geom_point() + 
+       aes(x=noise_present,y=amountExtrapolation)) +
+  geom_jitter(alpha=0.1, size=.5, width=0.15, height=0) + #geom_point() + 
   geom_hline(yintercept=0) + 
+  #geom_flat_violin(fill="gray80",color="gray80") +
   stat_summary(fun.data = mean_cl_boot, fun.args=(conf.int=0.95), 
                geom="errorbar", size=2, width=0.2, color='green4', alpha=0.82) +
   stat_summary(fun.data = "mean_cl_boot", color="green", size=.5) +
   facet_grid(first_speed~.)
 show(gg)
+ggsave( file.path("figures","MultipleStudiesPrevalencePerceptionDistributionsComplete.png"), width = 50, height = 30, units = "cm" )
+
 
 nonoise = dhh %>% filter(isOutlier==FALSE , noise_present=="no_noise")
 noise = dhh %>% filter(isOutlier==FALSE , noise_present=="noise")
