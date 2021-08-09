@@ -1,11 +1,13 @@
 library(tidyverse)
 theme_set(theme_classic(16))
 
+setwd("~/Documents/OneDrive - The University of Sydney (Students)/Empirical Thesis/Code/MOT_twinkle_goes_honours2021-main/R")
+
 library(here)
 
 source(here("utils.R"))
 
-local_data_pth <- file.path(here("..","exp1_JJC"), "data")
+local_data_pth <- file.path(here("..","exp1_JJC"), "data", "rn_exp1")
 #dir(local_data_pth)
 
 outpth <- here("exp1_JJC")
@@ -32,9 +34,10 @@ msg<- paste0("Number of files = ",as.character(nrow(fnames)), ".")
 print(msg)
 
 #Try reading an individual file
-analyse_only_most_recent_file <- T
+analyse_only_most_recent_file <- F
 if (analyse_only_most_recent_file) {
-  #testfile <- "999_noiseMot_exp1_noise_2021_May_10_1219.csv"
+  #testfile <- "cjh_noiseMot_exp1_noise_2021_Aug_02_1311"
+  
   testfile<- files$files[1]
   df <- read_csv(  file.path(local_data_pth, testfile) )
   # df_try <- read_csv(testfile,
@@ -56,7 +59,7 @@ if (analyse_only_most_recent_file) {
 }  else {
   # http://jenrichmond.rbind.io/post/use-map-to-read-many-csv-files/
   df<- fnames %>%                  # read each file into a tibble and combine them all
-    map_dfr(function(x) 
+    map_dfr(function(x)
       read_csv(file.path(local_data_pth, x)
       )
     )
@@ -136,12 +139,12 @@ dh <- dh %>% mutate(anyHiccupsLastFrames = timingHiccupsInLastFramesOfStimuli > 
 
 print("For each participant num trials with hiccups in last frames, and avg missed frames in whole trial for those trials:")
 dh %>% filter( anyHiccupsLastFrames > 0)  %>% 
-       group_by(participant)  %>%
-       summarise( trialsWithHiccupsLastFrames=  n(), avgMissedFramesInWholeTrial = mean(win.nDroppedFrames) )
+  group_by(participant)  %>%
+  summarise( trialsWithHiccupsLastFrames=  n(), avgMissedFramesInWholeTrial = mean(win.nDroppedFrames) )
 #Finished timing checks
 
 #Remove trials with timingHiccupsInLastFramesOfStimuli
-dh <- dh %>% filter(timingHiccupsInLastFramesOfStimuli == 0)
+#dh <- dh %>% filter(timingHiccupsInLastFramesOfStimuli == 0)
 
 #Create function that can parse array of finalStimFrameTimes
 calcAvgOfListFromPsychopy <- function( listAsTextFromPsychopy ){
@@ -169,18 +172,24 @@ dhh <- dhh %>% mutate(dx = obj0finalX - obj0preantepenultimateX,
 dhh<- dhh %>% mutate(finalDirection = atan2(dy,dx)/pi*180)
 #to calculate speed, divide distance travelled by 3 * interframe interval
 dhh<- dhh %>% mutate(finalSpeed =    sqrt(dx*dx + dy*dy) / (3*avgDurLastFrames/1000))
-  
+
 #final direction
 ggplot(dhh, aes(finalDirection)) + geom_histogram()
 #final speed
 ggplot(dhh, aes(finalSpeed)) + geom_histogram()
 
-#ggplot(dhh, aes(obj0finalX)) + geom_histogram()
-
 #Calculate distance between mouse.click and target
 dhh <- dhh %>% mutate(xErr = mouse.x - obj0finalX,
-                    yErr = mouse.y - obj0finalY)
+                      yErr = mouse.y - obj0finalY)
 ggplot(dhh, aes(xErr,yErr)) + geom_point()
+
+dhh <- dhh %>% mutate(euclidean_dist = sqrt(xErr^2 + yErr^2))
+
+ggplot(dhh, aes(euclidean_dist)) + geom_histogram()
+
+dhh %>% 
+  group_by(noise_present) %>% 
+  summarise(average = mean(euclidean_dist))
 
 #Calculate component of error relative to last direction
 #Project error vector onto direction vector
@@ -194,28 +203,35 @@ lengthProjected <- function(u, v) {
   return( dotproduct / lengthOfV )
   #For whole vector can use the following, although I don't understand it: (as.vector( (u %*% v) / (v %*% v) ) * v)
 }
-#Test lengthProjected function
-#u <- c(1.5,sqrt(3)/2)
-#v <- c(2,0)
-#length
 
-#Calculate length projected
-dhh <- dhh %>% 
-  mutate( amountExtrapolation =  
-            lengthProjected( #We want to project the mouse response error vector onto a final direction vector
-                            c(xErr,yErr), #mouse response error vector
-                            c(cos(finalDirection/180*pi), sin(finalDirection/180*pi)) #finalDirection vector
-                                                    ) 
-          )
+#Calculate length projected, cos() and sin() are in radians
+dhh <- dhh %>%
+  mutate( amountExtrapolation =
+            lengthProjected( #We want to project the mouse response error vector onto the final direction vector
+              c(xErr,yErr), #mouse response error vector
+              c(cos(finalDirection/180*pi), sin(finalDirection/180*pi)))) #finalDirection vector
 
 #EXCLUDE OUTLIERS
-outlierCriterion = 150
-dhh <- dhh %>% mutate( isOutlier =  sqrt(xErr^2 + yErr^2) > outlierCriterion )
-#dhh %>% filter(isOutlier==TRUE)
+#outlierCriterion <- 200
+#dhh <- dhh %>% mutate(isOutlier = sqrt(xErr^2+yErr^2) > outlierCriterion)
 
-#plot amount of extrapolation 
+#plot amount of extrapolation
+ggplot(dhh %>% filter(isOutlier==FALSE), 
+       aes(amountExtrapolation)) + geom_histogram()
+
 ggplot(dhh %>% filter(isOutlier==FALSE), 
        aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~.)
+
+ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~.)
+
+
+dhh %>% 
+  group_by(noise_present) %>% 
+  summarise(average = mean(amountExtrapolation), se = sd(amountExtrapolation)/sqrt(nrow(dhh)))
+
+dhh %>% 
+  group_by(noise_present, no_targets) %>% 
+  summarise(average = mean(amountExtrapolation), se = sd(amountExtrapolation)/sqrt(nrow(dhh)))
 
 #fix this
 ggplot(dhh, aes(x=noise_present,y=amountExtrapolation)) + geom_point() + 
@@ -223,12 +239,22 @@ ggplot(dhh, aes(x=noise_present,y=amountExtrapolation)) + geom_point() +
 
 ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~no_targets)
 
+#calculate eccentricity
+dhh <- dhh %>% mutate(eccentricity = sqrt(obj0finalX^2 + obj0finalY^2))
+
+dhh <- dhh %>% mutate(no_targets = factor(no_targets))
+
+ggplot(dhh, aes(x=eccentricity, y=amountExtrapolation, color=noise_present, shape=no_targets)) +
+  geom_point() + geom_smooth(method=lm, se=FALSE, fullrange=TRUE)
+
+ggplot(dhh, aes(x=eccentricity, y=euclidean_dist, color=noise_present, shape=no_targets)) +
+  geom_point() + geom_smooth(method=lm, se=FALSE, fullrange=TRUE)
+
+model <- lm(dhh, formula = amountExtrapolation ~ noise_present + no_targets + noise_present*no_targets + eccentricity)
+summary(model)
 
 #Plot error data
-#https://datavizpyr.com/rain-cloud-plots-using-half-violin-plot-with-jittered-data-points-in-r/
-#Load half violin plot: geom_flat_violin()
-source("https://raw.githubusercontent.com/datavizpyr/data/master/half_flat_violinplot.R")
-
+``
 #Calculate various distance metrics
 
 #Save data
@@ -245,7 +271,7 @@ df_trajectories <- files %>% map_dfr(function(x)
                      read_csv(file.path(trajectories_pth, x), col_names =F, col_types = cols(.default = "d")))
 
 #Why are there 500 trajectory ids and 81 of each?
-df_trajectories$trajectory_id <- rep(1:500, each = nrow(df_trajectories)/500)
+df_trajectories$trajectory_id <- rep(1:500, each = nrow(df_trajectories)/1000)
 
 colnames(df_trajectories)[1:17] <- c("t",
                                      expand.grid(c("X","y"),1:8) %>% tidyr::unite(cn, Var1, Var2,sep="") %>% pull(cn))
