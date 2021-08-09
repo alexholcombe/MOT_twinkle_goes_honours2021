@@ -6,7 +6,7 @@ library(Hmisc)
 
 source(here("utils.R"))
 
-local_data_pth <- file.path(here("..","exp1_LJM"), "data")
+local_data_pth <- file.path(here("..","exp1_LJM"), "data", "cjh_exp1")
 #dir(local_data_pth)
 
 outpth <- here("exp1_LJM")
@@ -33,25 +33,11 @@ msg<- paste0("Number of files = ",as.character(nrow(fnames)), ".")
 print(msg)
 
 #Try reading an individual file
-analyse_only_most_recent_file <- T
+analyse_only_most_recent_file <- F
 if (analyse_only_most_recent_file) {
   #testfile <- "999_noiseMot_exp1_noise_2021_May_10_1219.csv"
   testfile<- files$files[1]
   df <- read_csv(  file.path(local_data_pth, testfile) )
-  # df_try <- read_csv(testfile,
-  #                            col_types = cols(.default = col_double(),
-  #                                mark_type = col_character(),
-  #                                mouse.x = col_character(),
-  #                                mouse.y = col_character(),
-  #                                mouse.leftButton = col_character(),
-  #                                mouse.midButton = col_character(),
-  #                                mouse.rightButton = col_character(),
-  #                                mouse.clicked_name = col_character(),
-  #                                date = col_character(),
-  #                                motbox_path = col_character(),
-  #                                expName = col_character()
-  #               )
-  # )
   
   #If the last trial is not completed, then some columns such as prot_id will be "NA"
 }  else {
@@ -79,31 +65,14 @@ table(df$participant,df$date)
 #                 col_types = cols(.default= col_double()))
 #           )
 
-#Original Filip
-# df <- fnames %>%
-#   map(~ read_csv(file.path(local_data_pth, .), col_types = cols(.default = col_double(),
-#                                                                 t_contr = col_character(),
-#                                                                 mark_type = col_character(),
-#                                                                 mouse.x = col_character(),
-#                                                                 mouse.y = col_character(),
-#                                                                 mouse.leftButton = col_character(),
-#                                                                 mouse.midButton = col_character(),
-#                                                                 mouse.rightButton = col_character(),
-#                                                                 mouse.time = col_character(),
-#                                                                 mouse.clicked_name = col_character(),
-#                                                                 date = col_character(),
-#                                                                 motbox_path = col_character(),
-#                                                                 expName = col_character(),
-#                                                                 X27 = col_logical()))) %>% 
-#   reduce(rbind) %>% as_tibble()
-
 #Eliminate all but the important columns and rename a few
 dg <-df %>% 
   select(participant, 
          protocol = prot_id,
          trial = trial_id,
          trajectory_id,
-         speed1 = Var1, speed2 = Var2, speed3 = Var3,
+         first_speed,
+         final_speed, 
          noise_present,
          practice_trials.thisN,
          trials.thisN,
