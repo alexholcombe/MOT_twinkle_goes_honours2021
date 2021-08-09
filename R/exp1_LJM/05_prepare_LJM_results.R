@@ -43,11 +43,18 @@ if (analyse_only_most_recent_file) {
 }  else {
   # http://jenrichmond.rbind.io/post/use-map-to-read-many-csv-files/
   df<- fnames %>%                  # read each file into a tibble and combine them all
-    map_dfr(function(x) 
-      read_csv(file.path(local_data_pth, x)
-      )
-    )
+    map_dfr(  function(x) {
+                  df = read_csv(  file.path(local_data_pth, x) )
+                  df$direction <- as.double(df$direction)   #Because in unexplained cases (maybe because direction very rarely mysteriously "None", resulting in read_csv interpreting it as character instead of double)
+                  df
+                 } 
+            )
 }
+
+#The mysterious None case for direction
+#dg<-read_csv(  file.path(local_data_pth, "cjh_noiseMot_exp1_noise_2021_Aug_06_0943.csv") ) #chr
+#dh<- read_csv(  file.path(local_data_pth, "cjh_noiseMot_exp1_noise_2021_Aug_06_0959.csv") ) #dbl
+
 #Practice trials have some different columns than real trials, which explains many of the "NA"s
 
 #Be aware that if you quit the experiment early, the final trial will be almost entirely blank and filled in with "NA"
@@ -171,7 +178,7 @@ dhh <- dhh %>%
                       c(cos(finalDirection/180*pi), sin(finalDirection/180*pi)))) #finalDirection vector
 
 #EXCLUDE OUTLIERS
-outlierCriterion <- 150
+outlierCriterion <- 220 # 150
 dhh <- dhh %>% mutate(isOutlier = sqrt(xErr^2+yErr^2) > outlierCriterion)
 
 #plot amount of extrapolation
@@ -179,31 +186,30 @@ ggplot(dhh %>% filter(isOutlier==FALSE),
        aes(amountExtrapolation)) + geom_histogram()
 
 #plot amount of extrapolation for each possible speed for 3 final speeds
-ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(speed1~.)
-ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(speed2~.)
-ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(speed3~.)
+ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(first_speed~.)
+ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(final_speed~.)
+ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(first_speed~final_speed)
 
 #plot effect of noise on amount of extrapolation
 ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~.)
 
 #plot interaction between noise and each possible speed for 3 final speeds
-ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~speed1)
-ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~speed2)
-ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~speed3)
-
+ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~first_speed)
+ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~final_speed)
 
 gg<- ggplot(dhh %>% filter(isOutlier==FALSE),
-      aes(x=noise_present,y=amountExtrapolation)) + geom_point() + 
-      geom_hline(yintercept=0) + 
-            stat_summary(fun.data = "mean_cl_boot", color="red", size=1) 
-show(gg)
-
-ggplot(dhh %>% filter(isOutlier==FALSE),
        aes(x=noise_present,y=amountExtrapolation)) + geom_point() + 
   geom_hline(yintercept=0) + 
-  stat_summary(fun.data = "mean_cl_boot", color="red", size=1) +
-  facet_grid(speed1~.)
-               
+  stat_summary(fun.data = mean_cl_boot, fun.args=(conf.int=0.95), 
+               geom="errorbar", size=2, width=0.2, color='green4', alpha=0.82) +
+  stat_summary(fun.data = "mean_cl_boot", color="green", size=.5) +
+  facet_grid(first_speed~.)
+show(gg)
+
+nonoise = dhh %>% filter(isOutlier==FALSE , noise_present=="no_noise")
+noise = dhh %>% filter(isOutlier==FALSE , noise_present=="noise")
+t.test(nonoise$amountExtrapolation,noise$amountExtrapolation)
+
 ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~no_targets)
 
 
