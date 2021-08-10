@@ -1,0 +1,9 @@
+prot_id,trial_id,trajectory_id,line_orientation,no_targets,noise_present
+0,1,507,horizontal,2,noise
+0,2,508,horizontal,2,no_noise
+0,3,3,vertical,2,noise
+0,4,506,horizontal,1,no_noise
+0,5,2,vertical,1,no_noise
+0,6,4,vertical,2,no_noise
+0,7,505,horizontal,1,noise
+0,8,1,vertical,1,noise
