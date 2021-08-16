@@ -6,7 +6,7 @@ library(Hmisc)
 
 source(here("utils.R"))
 
-local_data_pth <- file.path(here("..","exp1_LJM"), "data", "cjh_exp1")
+local_data_pth <- file.path(here("..","exp1_LJM"), "data", "rn_exp1")
 #dir(local_data_pth)
 
 outpth <- here("exp1_LJM")
@@ -177,9 +177,21 @@ dhh <- dhh %>%
                       c(xErr,yErr), #mouse response error vector
                       c(cos(finalDirection/180*pi), sin(finalDirection/180*pi)))) #finalDirection vector
 
+dhh <- dhh %>%
+  mutate( velocityToFovea =
+                      lengthProjected( #We want to project the mouse response error vector onto the final direction vector
+                        c(cos(finalDirection/180*pi), sin(finalDirection/180*pi)),
+                        c(obj0finalX, obj0finalY)))
+                        
 #EXCLUDE OUTLIERS
 outlierCriterion <- 220 # 150
 dhh <- dhh %>% mutate(isOutlier = sqrt(xErr^2+yErr^2) > outlierCriterion)
+
+dhh %>% filter(isOutlier==FALSE) %>%
+  group_by(noise_present, first_speed, final_speed) %>% 
+  summarise(average = mean(amountExtrapolation), se = sd(amountExtrapolation)/sqrt(nrow(dhh)))
+
+#get means and standard error
 
 #plot amount of extrapolation
 ggplot(dhh %>% filter(isOutlier==FALSE), 
@@ -189,7 +201,7 @@ ggplot(dhh %>% filter(isOutlier==FALSE),
 #Load half violin plot: geom_flat_violin()
 source("https://raw.githubusercontent.com/datavizpyr/data/master/half_flat_violinplot.R")
 
-#plot amount of extrapolation for each possible speed for 3 final speeds
+#plot amount of extrapolation for each possible speed for first and final speed
 ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(first_speed~.)
 ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(final_speed~.)
 ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(first_speed~final_speed)
@@ -197,9 +209,11 @@ ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(first_spee
 #plot effect of noise on amount of extrapolation
 ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~.)
 
-#plot interaction between noise and each possible speed for 3 final speeds
+#plot interaction between noise and each possible speed for first and final speed
 ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~first_speed)
 ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~final_speed)
+ggplot(dhh, aes(x=noise_present, y=amountExtrapolation)) + geom_point() + facet_grid(first_speed~final_speed) + stat_summary(fun.data = mean_cl_boot, fun.args=(conf.int=0.95), 
+                                                                                                                             geom="errorbar", size=2, width=0.2, color='green4', alpha=0.84) 
 
 gg<- ggplot(dhh %>% filter(isOutlier==FALSE),
        aes(x=noise_present,y=amountExtrapolation)) +
@@ -211,15 +225,48 @@ gg<- ggplot(dhh %>% filter(isOutlier==FALSE),
   stat_summary(fun.data = "mean_cl_boot", color="green", size=.5) +
   facet_grid(first_speed~.)
 show(gg)
-ggsave( file.path("figures","MultipleStudiesPrevalencePerceptionDistributionsComplete.png"), width = 50, height = 30, units = "cm" )
+#ggsave( file.path("figures","MultipleStudiesPrevalencePerceptionDistributionsComplete.png"), width = 50, height = 30, units = "cm" )
 
-
+#Twinkle goes t-test
 nonoise = dhh %>% filter(isOutlier==FALSE , noise_present=="no_noise")
 noise = dhh %>% filter(isOutlier==FALSE , noise_present=="noise")
 t.test(nonoise$amountExtrapolation,noise$amountExtrapolation)
 
-ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~no_targets)
+#Temporal integration t-test (although maybe a t-test is not appropriate, these conditions are meant to be similar rather than different)
+slowinitialfastfinal = dhh %>% filter(isOutlier==FALSE , first_speed == 500, final_speed == 1000)
+fastinitialslowfinal = dhh %>% filter(isOutlier==FALSE , first_speed == 1000, final_speed == 500)
+t.test(slowinitialfastfinal$amountExtrapolation,fastinitialslowfinal$amountExtrapolation)
 
+#Effect of speed t-test
+slowinitialslowfinal = dhh %>% filter(isOutlier==FALSE , first_speed == 500, final_speed == 500)
+fastinitialfastfinal = dhh %>% filter(isOutlier==FALSE , first_speed == 1000, final_speed == 1000)
+t.test(slowinitialslowfinal$amountExtrapolation,fastinitialfastfinal$amountExtrapolation)
+
+#Graph effect of eccentricity on extrapolation by noise
+dhh <- dhh %>% mutate(eccentricity = sqrt(obj0finalX^2 + obj0finalY^2))
+ggplot(dhh %>% filter(isOutlier==FALSE), aes(x=eccentricity, y=amountExtrapolation, color=noise_present)) +
+  geom_point() + geom_smooth(method=lm, se=FALSE, fullrange=TRUE)
+
+#Calculate linear regression model 
+# model <- lm(dhh, formula = amountExtrapolation ~ noise_present + first_speed + final_speed +
+#               first_speed*final_speed + first_speed*noise_present + final_speed*noise_present +
+#               noise_present*first_speed*final_speed)
+# summary(model)
+options(contrasts = c("contr.sum","contr.poly"))
+
+finish_line <- lm(amountExtrapolation ~ first_speed + final_speed + noise_present, data = dhh)
+
+drop1(finish_line, .~., test="F")
+
+#Same model with eccentricity as a confound
+modeleccentricity <- lm(dhh, formula = amountExtrapolation ~ noise_present + first_speed + final_speed +
+              first_speed*final_speed + first_speed*noise_present + final_speed*noise_present +
+              noise_present*first_speed*final_speed + eccentricity)
+summary(modeleccentricity)
+
+#Linear regression model with only noise, eccentricity, and their interaction term
+modeleccentricityinteraction <- lm(dhh, formula = amountExtrapolation ~ noise_present + eccentricity + noise_present*eccentricity)
+summary(modeleccentricityinteraction)
 
 #Plot error data
 
