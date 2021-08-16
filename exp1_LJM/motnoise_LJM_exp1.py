@@ -36,8 +36,8 @@ os.chdir(_thisDir)
 frameTolerance = 0.001  # how close to onset before 'same' frame
 refreshRatePlanningOn = 60
 
-monitorwidth = 28.5 #monitor width in cm
-viewdist = 57 #cm
+monitorwidth = 33#AH # 28.5 #monitor width in cm
+viewdist = 52 #AH  57 #cm
 scrn=0 #0 to use main screen (or second screen with mirroring), 1 to use external screen connected to computer
 widthPix = 2880
 heightPix = 1800
