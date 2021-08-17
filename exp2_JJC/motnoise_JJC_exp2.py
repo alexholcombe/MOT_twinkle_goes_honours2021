@@ -337,8 +337,8 @@ cue_v = visual.Rect(
         fillColor=None, fillColorSpace='rgb', autoDraw=False,
         opacity=1, depth=-1.0, interpolate=True)
 
-cue_h.lineWidth = 10
-cue_v.lineWidth = 10
+cue_h.lineWidth = 16
+cue_v.lineWidth = 16
 
 mouseHighlight = visual.Circle(
         win=win, name='mouseHighlight',units='pix', radius=28,
