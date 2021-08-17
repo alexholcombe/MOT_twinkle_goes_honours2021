@@ -330,6 +330,13 @@ cue_h = visual.Rect(
         fillColor=None, fillColorSpace='rgb', autoDraw=False,
         opacity=1, depth=-1.0, interpolate=True)
 
+cue_h_extra = visual.Rect(
+        win=win, name='cue_h_extra',units='norm', size=(1.987, 0.992),
+        ori=0, pos=(0.5, 0),
+        lineWidth=0, lineColor=[-1,1,-1], lineColorSpace='rgb',
+        fillColor=None, fillColorSpace='rgb', autoDraw=False,
+        opacity=1, depth=-1.0, interpolate=True)
+
 cue_v = visual.Rect(
         win=win, name='cue_v',units='norm', size=(1, 2),
         ori=0, pos=(0, 0.5),
@@ -337,8 +344,17 @@ cue_v = visual.Rect(
         fillColor=None, fillColorSpace='rgb', autoDraw=False,
         opacity=1, depth=-1.0, interpolate=True)
 
+cue_v_extra = visual.Rect(
+        win=win, name='cue_v_extra',units='norm', size=(0.992, 1.987),
+        ori=0, pos=(0, 0.5),
+        lineWidth=0, lineColor=[-1,1,-1], lineColorSpace='rgb',
+        fillColor=None, fillColorSpace='rgb', autoDraw=False,
+        opacity=1, depth=-1.0, interpolate=True)
+
 cue_h.lineWidth = 16
 cue_v.lineWidth = 16
+cue_h_extra.lineWidth = 16
+cue_v_extra.lineWidth = 16
 
 mouseHighlight = visual.Circle(
         win=win, name='mouseHighlight',units='pix', radius=28,
@@ -719,7 +735,9 @@ if expInfo['protocol'] == '101' or expInfo['protocol'] == '201' or expInfo['prot
             o1.setAutoDraw(False)
             cue_h.setAutoDraw(False)
             cue_v.setAutoDraw(False)
-            
+            cue_h_extra.setAutoDraw(False)
+            cue_v_extra.setAutoDraw(False)
+
             # cueing of the targets phase at beginning of trial
             if t >= 0 and t <= cue_time:
                 # simple iterator through frames
@@ -819,16 +837,24 @@ if expInfo['protocol'] == '101' or expInfo['protocol'] == '201' or expInfo['prot
     #            text.draw( )
                 if shouldMark == 'upper':
                     cue_h.pos = [0, 0.5]
+                    cue_h_extra.pos = [0, 0.49]
                     cue_h.draw()
+                    cue_h_extra.draw()
                 elif shouldMark == 'lower':
                     cue_h.pos = [0, -0.5]
+                    cue_h_extra.pos = [0, -0.5]
                     cue_h.draw()
+                    cue_h_extra.draw()
                 elif shouldMark == 'left':
                     cue_v.pos = [-0.5, 0]
+                    cue_v_extra.pos = [-0.5, 0]
                     cue_v.draw()
+                    cue_v_extra.draw()
                 elif shouldMark == 'right':
                     cue_v.pos = [0.5, 0]
+                    cue_v_extra.pos = [0.5, 0]
                     cue_v.draw()
+                    cue_v_extra.draw()
             
                 if nClicks < 1:  # repeat, until participant clicked in cued quadrant
                     win.mouseVisible = True
@@ -1415,16 +1441,24 @@ for thisTrial in trials:
 #            text.draw( )
             if shouldMark == 'upper':
                 cue_h.pos = [0, 0.5]
+                cue_h_extra.pos = [0, 0.49]
                 cue_h.draw()
+                cue_h_extra.draw()
             elif shouldMark == 'lower':
                 cue_h.pos = [0, -0.5]
+                cue_h_extra.pos = [0, -0.5]
                 cue_h.draw()
+                cue_h_extra.draw()
             elif shouldMark == 'left':
                 cue_v.pos = [-0.5, 0]
+                cue_v_extra.pos = [-0.5, 0]
                 cue_v.draw()
+                cue_v_extra.draw()
             elif shouldMark == 'right':
                 cue_v.pos = [0.5, 0]
+                cue_v_extra.pos = [0.5, 0]
                 cue_v.draw()
+                cue_v_extra.draw()
                 
             if nClicks < 1:  # repeat, until participant clicked in cued quadrant
                 win.mouseVisible = True
