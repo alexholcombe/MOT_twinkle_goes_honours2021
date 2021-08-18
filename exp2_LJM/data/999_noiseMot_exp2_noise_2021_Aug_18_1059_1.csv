@@ -1,0 +1,8 @@
+﻿practice_trials.thisRepN,practice_trials.thisTrialN,practice_trials.thisN,practice_trials.thisIndex,P.objects[0].started,P.objects[0].tLastFrame,P.objects[0].penultimatex0,P.objects[0].penultimatey0,P.objects[0].antepenultimatex0,P.objects[0].antepenultimatey0,P.objects[0].preantepenultimatex0,P.objects[0].preantepenultimatey0,P.objects[0].finalx0,P.objects[0].finaly0,win.nDroppedFrames,finalStimFrameTimes,worstLastFramesDur,timingHiccupsInLastFramesOfStimuli,motbox_path,participant,expName,date,psychopyVersion,response,wasCorrect,condition,flipStatus,offset,trialNumber,
+0,-1,-1,0,3.3798082743305713,2.71391632524319,15.38183948130704,-199.25098061887547,6.869144976263712,-199.25098061887547,-1.4333490341586668,-199.25098061887547,23.45935401379488,-199.25098061887547,0,"[16.20522898 16.98766707 16.65041002 16.75455191 16.49563503 16.79749903
+ 16.70980803 16.74363099 16.60948899 16.601037   16.686799   16.59261598
+ 16.80198195 16.68804709 16.630625   16.73018397 16.55292395 16.648088
+ 16.67546004 16.62562694 16.92493411 16.33319492 16.84843004 16.52442396
+ 16.79701707 16.75250195 16.42865106 16.84591291 16.77184401 16.69602899
+ 16.92367403 16.487165   16.34838001 16.82393602 16.57002198 16.63454797
+ 16.96925401 16.211882   16.90184197]",16.987667069770396,0,../,999,noiseMot_exp2_noise,2021_Aug_18_1059,2021.2.1,['up'],1,1000x500xstatic,flipped,0,practice,
