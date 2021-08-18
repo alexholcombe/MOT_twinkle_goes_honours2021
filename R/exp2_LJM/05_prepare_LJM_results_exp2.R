@@ -1,6 +1,10 @@
+if(!"quickpsy" %in% rownames(installed.packages())) install.packages("quickpsy")
+
 library(tidyverse)
 theme_set(theme_classic(16))
-
+library(MPDiR)
+library(dplyr)
+library(quickpsy)
 library(here)
 library(Hmisc)
 
@@ -151,119 +155,117 @@ dhh<- dhh %>% mutate(finalSpeed =    sqrt(dx*dx + dy*dy) / (3*avgDurLastFrames/1
 #final speed
 ggplot(dhh, aes(finalSpeed)) + geom_histogram()
 
-#log transformation of wasUp
-dhh <- dhh %>% mutate(logwasUp = log(wasUp+1))
-
-
+#fit quickpsy model to data?
+fit <- quickpsy(dhh, x = offset, k = wasUp, n = 125, grouping = .(first_speed, final_speed, noise_status), B = 1000)
 
 #Analyse response by offset and condition?
-dii <- dhh %>%
-  group_by(condition,offset) %>% 
-  summarise(proportionUp = mean(wasUp), se = sd(wasUp)/sqrt(nrow(dhh)))
-
-ggplot(dii, aes(x=offset, y=proportionUp)) + geom_point() + stat_smooth(method = "lm", formula = y ~ x, size = 1) + facet_grid(condition~.) 
-                        
-#EXCLUDE OUTLIERS
-outlierCriterion <- 220 # 150
-dhh <- dhh %>% mutate(isOutlier = sqrt(xErr^2+yErr^2) > outlierCriterion)
-
-dhh %>% filter(isOutlier==FALSE) %>%
-  group_by(noise_present, first_speed, final_speed) %>% 
-  summarise(average = mean(amountExtrapolation), se = sd(amountExtrapolation)/sqrt(nrow(dhh)))
-
-ggplot(dhh, aes(x=offset, y=logwasUp)) + geom_point() + facet_grid(condition~.) 
-
-#get means and standard error
-
-#plot amount of extrapolation
-ggplot(dhh %>% filter(isOutlier==FALSE), 
-       aes(amountExtrapolation)) + geom_histogram()
-
-#https://datavizpyr.com/rain-cloud-plots-using-half-violin-plot-with-jittered-data-points-in-r/
-#Load half violin plot: geom_flat_violin()
-source("https://raw.githubusercontent.com/datavizpyr/data/master/half_flat_violinplot.R")
-
-#plot amount of extrapolation for each possible speed for first and final speed
-ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(first_speed~.)
-ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(final_speed~.)
-ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(first_speed~final_speed)
-
-#plot effect of noise on amount of extrapolation
-ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~.)
-
-#plot interaction between noise and each possible speed for first and final speed
-ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~first_speed)
-ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~final_speed)
-ggplot(dhh, aes(x=noise_present, y=amountExtrapolation)) + geom_point() + facet_grid(first_speed~final_speed) + stat_summary(fun.data = mean_cl_boot, fun.args=(conf.int=0.95), 
-                                                                                                                             geom="errorbar", size=2, width=0.2, color='green4', alpha=0.84) 
-
-gg<- ggplot(dhh %>% filter(isOutlier==FALSE),
-       aes(x=noise_present,y=amountExtrapolation)) +
-  geom_jitter(alpha=0.1, size=.5, width=0.15, height=0) + #geom_point() + 
-  geom_hline(yintercept=0) + 
-  #geom_flat_violin(fill="gray80",color="gray80") +
-  stat_summary(fun.data = mean_cl_boot, fun.args=(conf.int=0.95), 
-               geom="errorbar", size=2, width=0.2, color='green4', alpha=0.82) +
-  stat_summary(fun.data = "mean_cl_boot", color="green", size=.5) +
-  facet_grid(first_speed~.)
-show(gg)
-#ggsave( file.path("figures","MultipleStudiesPrevalencePerceptionDistributionsComplete.png"), width = 50, height = 30, units = "cm" )
-
-#Twinkle goes t-test
-nonoise = dhh %>% filter(isOutlier==FALSE , noise_present=="no_noise")
-noise = dhh %>% filter(isOutlier==FALSE , noise_present=="noise")
-t.test(nonoise$amountExtrapolation,noise$amountExtrapolation)
-
-#Temporal integration t-test (although maybe a t-test is not appropriate, these conditions are meant to be similar rather than different)
-slowinitialfastfinal = dhh %>% filter(isOutlier==FALSE , first_speed == 500, final_speed == 1000)
-fastinitialslowfinal = dhh %>% filter(isOutlier==FALSE , first_speed == 1000, final_speed == 500)
-t.test(slowinitialfastfinal$amountExtrapolation,fastinitialslowfinal$amountExtrapolation)
-
-#Effect of speed t-test
-slowinitialslowfinal = dhh %>% filter(isOutlier==FALSE , first_speed == 500, final_speed == 500)
-fastinitialfastfinal = dhh %>% filter(isOutlier==FALSE , first_speed == 1000, final_speed == 1000)
-t.test(slowinitialslowfinal$amountExtrapolation,fastinitialfastfinal$amountExtrapolation)
-
-#Graph effect of eccentricity on extrapolation by noise
-dhh <- dhh %>% mutate(eccentricity = sqrt(obj0finalX^2 + obj0finalY^2))
-ggplot(dhh %>% filter(isOutlier==FALSE), aes(x=eccentricity, y=amountExtrapolation, color=noise_present)) +
-  geom_point() + geom_smooth(method=lm, se=FALSE, fullrange=TRUE)
-
-#Calculate linear regression model 
-# model <- lm(dhh, formula = amountExtrapolation ~ noise_present + first_speed + final_speed +
-#               first_speed*final_speed + first_speed*noise_present + final_speed*noise_present +
-#               noise_present*first_speed*final_speed)
-# summary(model)
-options(contrasts = c("contr.sum","contr.poly"))
-
-finish_line <- lm(amountExtrapolation ~ first_speed + final_speed + noise_present, data = dhh)
-
-drop1(finish_line, .~., test="F")
-
-#Same model with eccentricity as a confound
-options(contrasts = c("contr.sum","contr.poly"))
-
-finish_line <- lm(amountExtrapolation ~ first_speed + final_speed + noise_present + eccentricity, data = dhh)
-
-drop1(finish_line, .~., test="F")
-
-#Linear regression model with only noise, eccentricity, and their interaction term
-modeleccentricityinteraction <- lm(dhh, formula = amountExtrapolation ~ noise_present + 
-                                     eccentricity + velocityToFovea + noise_present*velocityToFovea + 
-                                     eccentricity*velocityToFovea)
-summary(modeleccentricityinteraction)
-
-
-modelveltofoveainteraction <- lm(dhh, formula = amountExtrapolation ~ noise_present + velocityToFovea + noise_present*velocityToFovea)
-modelveltofoveainteraction <- lm(dhh, formula = amountExtrapolation ~ noise_present)
-summary(modelveltofoveainteraction)
-
-#Plot error data
-
-#Calculate various distance metrics
+# dii <- dhh %>%
+#   group_by(condition,offset) %>% 
+#   summarise(proportionUp = mean(wasUp), se = sd(wasUp)/sqrt(nrow(dhh)))
+# 
+# ggplot(dii, aes(x=offset, y=proportionUp)) + geom_point() + stat_smooth(method = "lm", formula = y ~ x, size = 1) + facet_grid(condition~.) 
+#                         
+# #EXCLUDE OUTLIERS
+# outlierCriterion <- 220 # 150
+# dhh <- dhh %>% mutate(isOutlier = sqrt(xErr^2+yErr^2) > outlierCriterion)
+# 
+# dhh %>% filter(isOutlier==FALSE) %>%
+#   group_by(noise_present, first_speed, final_speed) %>% 
+#   summarise(average = mean(amountExtrapolation), se = sd(amountExtrapolation)/sqrt(nrow(dhh)))
+# 
+# ggplot(dhh, aes(x=offset, y=logwasUp)) + geom_point() + facet_grid(condition~.) 
+# 
+# #get means and standard error
+# 
+# #plot amount of extrapolation
+# ggplot(dhh %>% filter(isOutlier==FALSE), 
+#        aes(amountExtrapolation)) + geom_histogram()
+# 
+# #https://datavizpyr.com/rain-cloud-plots-using-half-violin-plot-with-jittered-data-points-in-r/
+# #Load half violin plot: geom_flat_violin()
+# source("https://raw.githubusercontent.com/datavizpyr/data/master/half_flat_violinplot.R")
+# 
+# #plot amount of extrapolation for each possible speed for first and final speed
+# ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(first_speed~.)
+# ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(final_speed~.)
+# ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(first_speed~final_speed)
+# 
+# #plot effect of noise on amount of extrapolation
+# ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~.)
+# 
+# #plot interaction between noise and each possible speed for first and final speed
+# ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~first_speed)
+# ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~final_speed)
+# ggplot(dhh, aes(x=noise_present, y=amountExtrapolation)) + geom_point() + facet_grid(first_speed~final_speed) + stat_summary(fun.data = mean_cl_boot, fun.args=(conf.int=0.95), 
+#                                                                                                                              geom="errorbar", size=2, width=0.2, color='green4', alpha=0.84) 
+# 
+# gg<- ggplot(dhh %>% filter(isOutlier==FALSE),
+#        aes(x=noise_present,y=amountExtrapolation)) +
+#   geom_jitter(alpha=0.1, size=.5, width=0.15, height=0) + #geom_point() + 
+#   geom_hline(yintercept=0) + 
+#   #geom_flat_violin(fill="gray80",color="gray80") +
+#   stat_summary(fun.data = mean_cl_boot, fun.args=(conf.int=0.95), 
+#                geom="errorbar", size=2, width=0.2, color='green4', alpha=0.82) +
+#   stat_summary(fun.data = "mean_cl_boot", color="green", size=.5) +
+#   facet_grid(first_speed~.)
+# show(gg)
+# #ggsave( file.path("figures","MultipleStudiesPrevalencePerceptionDistributionsComplete.png"), width = 50, height = 30, units = "cm" )
+# 
+# #Twinkle goes t-test
+# nonoise = dhh %>% filter(isOutlier==FALSE , noise_present=="no_noise")
+# noise = dhh %>% filter(isOutlier==FALSE , noise_present=="noise")
+# t.test(nonoise$amountExtrapolation,noise$amountExtrapolation)
+# 
+# #Temporal integration t-test (although maybe a t-test is not appropriate, these conditions are meant to be similar rather than different)
+# slowinitialfastfinal = dhh %>% filter(isOutlier==FALSE , first_speed == 500, final_speed == 1000)
+# fastinitialslowfinal = dhh %>% filter(isOutlier==FALSE , first_speed == 1000, final_speed == 500)
+# t.test(slowinitialfastfinal$amountExtrapolation,fastinitialslowfinal$amountExtrapolation)
+# 
+# #Effect of speed t-test
+# slowinitialslowfinal = dhh %>% filter(isOutlier==FALSE , first_speed == 500, final_speed == 500)
+# fastinitialfastfinal = dhh %>% filter(isOutlier==FALSE , first_speed == 1000, final_speed == 1000)
+# t.test(slowinitialslowfinal$amountExtrapolation,fastinitialfastfinal$amountExtrapolation)
+# 
+# #Graph effect of eccentricity on extrapolation by noise
+# dhh <- dhh %>% mutate(eccentricity = sqrt(obj0finalX^2 + obj0finalY^2))
+# ggplot(dhh %>% filter(isOutlier==FALSE), aes(x=eccentricity, y=amountExtrapolation, color=noise_present)) +
+#   geom_point() + geom_smooth(method=lm, se=FALSE, fullrange=TRUE)
+# 
+# #Calculate linear regression model 
+# # model <- lm(dhh, formula = amountExtrapolation ~ noise_present + first_speed + final_speed +
+# #               first_speed*final_speed + first_speed*noise_present + final_speed*noise_present +
+# #               noise_present*first_speed*final_speed)
+# # summary(model)
+# options(contrasts = c("contr.sum","contr.poly"))
+# 
+# finish_line <- lm(amountExtrapolation ~ first_speed + final_speed + noise_present, data = dhh)
+# 
+# drop1(finish_line, .~., test="F")
+# 
+# #Same model with eccentricity as a confound
+# options(contrasts = c("contr.sum","contr.poly"))
+# 
+# finish_line <- lm(amountExtrapolation ~ first_speed + final_speed + noise_present + eccentricity, data = dhh)
+# 
+# drop1(finish_line, .~., test="F")
+# 
+# #Linear regression model with only noise, eccentricity, and their interaction term
+# modeleccentricityinteraction <- lm(dhh, formula = amountExtrapolation ~ noise_present + 
+#                                      eccentricity + velocityToFovea + noise_present*velocityToFovea + 
+#                                      eccentricity*velocityToFovea)
+# summary(modeleccentricityinteraction)
+# 
+# 
+# modelveltofoveainteraction <- lm(dhh, formula = amountExtrapolation ~ noise_present + velocityToFovea + noise_present*velocityToFovea)
+# modelveltofoveainteraction <- lm(dhh, formula = amountExtrapolation ~ noise_present)
+# summary(modelveltofoveainteraction)
+# 
+# #Plot error data
+# 
+# #Calculate various distance metrics
 
 #Save data
-write_rds(dg, here("exp1","data_processed",outputFname))
+write_rds(dg, here("exp2","data_processed",outputFname))
 
 
 # prepare trajectories for analysis --------------------------------------
