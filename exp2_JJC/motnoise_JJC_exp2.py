@@ -1466,6 +1466,7 @@ for thisTrial in trials:
                 win.mouseVisible = True
                 xToHighlightMousePos, yToHighlightMousePos = mouse.getPos()
                 mouseHighlight.setPos([xToHighlightMousePos, yToHighlightMousePos])
+                mouse_pos = mouse.getPos()
                 if not mouse_pos.all() == 0:
                     mouseHighlight.draw()
                 if mouse.isPressedIn(cue_v, buttons=[0]) or autopilot or mouse.isPressedIn(cue_h, buttons=[0]):
