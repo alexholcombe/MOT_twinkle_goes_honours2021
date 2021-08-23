@@ -8,7 +8,7 @@ library(here)
 library(tidyverse)
 library(gtools)
 
-timeGrain<- .0166666666 #Speed, direction are specified by R every timeGrain seconds, which gets
+timeGrain<- .004166666666666666666 #Speed, direction are specified by R every timeGrain seconds, which gets
 #turned into a trajectory file that specifies position every timeGrain seconds
 
 #set number of objects in trajectory here
@@ -16,7 +16,7 @@ how_many_objects <- 1
 
 #starting location settings
 sett_generate <-
-  new_settings(xlim = c(-601, -600), ylim = c(199, 200), min_distance = 120,
+  new_settings(xlim = c(-600.0000000000001, -600), ylim = c(150, 150.0000000000001), min_distance = 120,
                arena_shape = "circle")
 
 sett_move <-
@@ -123,10 +123,10 @@ for (step in 1:length(stepfunction)) {
   first_portion_speed <- possible_speeds_with_noise[i,1]
   final_portion_speed <- possible_speeds_with_noise[i,2]
   distance_to_center <- abs(sett_generate$xlim[2])
-  duration_of_final_portion <- 0.16666666
+  duration_of_final_portion <- 0.166666666666666666666666
 
-  duration_of_first_portion <- ((distance_to_center - 
-                                   duration_of_final_portion*final_portion_speed) / first_portion_speed) + (thisStep+2)*timeGrain #add 2 on the end here because 2 timeGrains of the first trajectory are lost in stitching the two trajectories together?
+  duration_of_first_portion <- ((distance_to_center - duration_of_final_portion*final_portion_speed) / first_portion_speed) + 
+    thisStep*timeGrain*(1000/first_portion_speed)
   
   times <- seq(from = 0,to = duration_of_first_portion,by=timeGrain)
   
