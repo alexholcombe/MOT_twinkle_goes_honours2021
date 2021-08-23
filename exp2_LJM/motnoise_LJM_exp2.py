@@ -380,7 +380,7 @@ pracStairs=[]
 for thisCondition in practiceConditionInfo['conditions']:
     thisStair = data.StairHandler(startVal=0, 
         stepSizes=[4,4,2,2,1,1], 
-        nTrials=5, nUp=1, nDown=3, 
+        nTrials=5, nUp=1, nDown=1, 
         extraInfo=thisCondition, 
         stepType='lin', minVal=-4, 
         maxVal=4)
@@ -489,16 +489,17 @@ o1 = visual.Rect(
     win=win, name ='o1',
     units="pix",
     size=(50,100),
-    fillColor=['red'],
-    lineColor=['red'], depth =-1.0)
+    fillColor=['grey'],
+    lineColor=['grey'], depth =-1.0)
 o1.setAutoDraw(False) #Because copies will be made of it by Puppetteer (P), and it will draw them, so o1 is never drawn
 
 for trialN in range(practiceConditionInfo['nTrials']):
     shuffle(pracStairs)
     for thisStair in pracStairs:
         thisIntensity = next(thisStair)
+        print(thisIntensity)
         track_filename = 'trajectories/T%00d%s.csv' % (thisIntensity,thisStair.extraInfo)
-        if ((trialN + 1) % 2) > 0:
+        if '500x500xdynamic' in thisStair.extraInfo or '1000x500xdynamic' in thisStair.extraInfo or '500x1000xstatic' in thisStair.extraInfo or '1000x1000xstatic' in thisStair.extraInfo:
             track_filename = 'trajectories/T%00d%sf.csv' % (thisIntensity,thisStair.extraInfo)
         currentLoop = practice_trials
         # abbreviate parameter names if possible (e.g. rgb = thisPractice_trial.rgb)
@@ -657,13 +658,11 @@ for trialN in range(practiceConditionInfo['nTrials']):
                 text.draw( )
                 keys = event.getKeys()
                 for thisKey in keys:
-                    if ((thisKey == 'up' and P.objects[0].finalx0 > 0) or
-                    (thisKey == 'down' and P.objects[0].finalx0 <= 0)):
-                        wasCorrect = 1
+                    if (thisKey == 'up'):
+                        wasUp = 1
                         nKeys = nKeys + 1
-                    elif ((thisKey == 'up' and P.objects[0].finalx0 <= 0) or
-                    (thisKey == 'down' and P.objects[0].finalx0 > 0)): 
-                        wasCorrect = 0
+                    elif (thisKey == 'down'): 
+                        wasUp = 0
                         nKeys = nKeys + 1
                 if not finishedCriticalStimuli:
                     lenFrameTimesUntilStimuliFinish = len(win._frameTimes)
@@ -683,14 +682,14 @@ for trialN in range(practiceConditionInfo['nTrials']):
                             noise.buildNoise()
                         else:
                             noise.draw() #AOH
-                            if (frameN-noise.frameNStart) % 2 == 0:
+                            if (frameN-noise.frameNStart) % 1 == 0:
                                 noise.updateNoise()
                 else:
                     noise.draw( )
                 if nKeys > 0:
-                    thisStair.addResponse(wasCorrect)
+                    thisStair.addResponse(wasUp)
                     expInfo['response'] = keys
-                    expInfo['wasCorrect'] = wasCorrect
+                    expInfo['wasUp'] = wasUp
                     expInfo['condition'] = thisStair.extraInfo
                     if 'f' in track_filename:
                         expInfo['flipStatus'] = 'flipped'
@@ -809,7 +808,7 @@ for thisCondition in conditionInfo['conditions']:
     thisStartVal = randint(-4,4)
     thisStair = data.StairHandler(startVal=thisStartVal, 
         stepSizes=[4,4,2,2,1,1], 
-        nTrials=125, nUp=1, nDown=3, 
+        nTrials=125, nUp=1, nDown=1, 
         extraInfo=thisCondition, 
         stepType='lin', minVal=-4, 
         maxVal=4)
@@ -932,9 +931,13 @@ for trialN in range(conditionInfo['nTrials']):
     shuffle(stairs)
     for thisStair in stairs:
         thisIntensity = next(thisStair)
-        track_filename = 'trajectories/T%00d%s.csv' % (-thisIntensity,thisStair.extraInfo)
+        track_filename = 'trajectories/T%00d%s.csv' % (thisIntensity,thisStair.extraInfo)
+        if '500x500xdynamic' in thisStair.extraInfo or '1000x500xdynamic' in thisStair.extraInfo or '500x1000xstatic' in thisStair.extraInfo or '1000x1000xstatic' in thisStair.extraInfo:
+            track_filename = 'trajectories/T%00d%sf.csv' % (thisIntensity,thisStair.extraInfo)
         if ((trialN + 1) % 2) > 0:
-            track_filename = 'trajectories/T%00d%sf.csv' % (-thisIntensity,thisStair.extraInfo)
+            track_filename = 'trajectories/T%00d%sf.csv' % (thisIntensity,thisStair.extraInfo)
+            if '500x500xdynamic' in thisStair.extraInfo or '1000x500xdynamic' in thisStair.extraInfo or '500x1000xstatic' in thisStair.extraInfo or '1000x1000xstatic' in thisStair.extraInfo:
+                track_filename = 'trajectories/T%00d%s.csv' % (thisIntensity,thisStair.extraInfo)
         currentLoop = trials
         frameN = -1
         win.blendMode = 'avg'
@@ -1077,13 +1080,11 @@ for trialN in range(conditionInfo['nTrials']):
                 text.draw( )
                 keys = event.getKeys()
                 for thisKey in keys:
-                    if ((thisKey == 'up' and P.objects[0].finalx0 > 0) or
-                    (thisKey == 'down' and P.objects[0].finalx0 <= 0)):
-                        wasCorrect = 1
+                    if (thisKey == 'up'):
+                        wasUp = 1
                         nKeys = nKeys + 1
-                    elif ((thisKey == 'up' and P.objects[0].finalx0 <= 0) or
-                    (thisKey == 'down' and P.objects[0].finalx0 > 0)): 
-                        wasCorrect = 0
+                    elif (thisKey == 'down'): 
+                        wasUp = 0
                         nKeys = nKeys + 1
                 if not finishedCriticalStimuli:
                     lenFrameTimesUntilStimuliFinish = len(win._frameTimes)
@@ -1103,19 +1104,20 @@ for trialN in range(conditionInfo['nTrials']):
                             noise.buildNoise()
                         else:
                             noise.draw() #AOH
-                            if (frameN-noise.frameNStart) % 2 == 0:
+                            if (frameN-noise.frameNStart) % 1 == 0:
                                 noise.updateNoise()
+                                
                 else:
                     noise.draw( )
                 if nKeys > 0:
-                    thisStair.addResponse(wasCorrect)
+                    thisStair.addResponse(wasUp)
                     expInfo['response'] = keys
-                    expInfo['wasCorrect'] = wasCorrect
+                    expInfo['wasUp'] = wasUp
                     expInfo['condition'] = thisStair.extraInfo
                     if 'f' in track_filename:
                         expInfo['flipStatus'] = 'flipped'
                     else: expInfo['flipStatus'] = 'not_flipped'
-                    expInfo['offset'] = -thisIntensity
+                    expInfo['offset'] = thisIntensity
                     trialNumber = trialNumber + 1
                     expInfo['trialNumber'] = trialNumber
                     continueRoutine = False
