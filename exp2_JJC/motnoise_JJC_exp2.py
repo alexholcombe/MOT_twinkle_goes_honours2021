@@ -860,7 +860,9 @@ if expInfo['protocol'] == '101' or expInfo['protocol'] == '201' or expInfo['prot
                     win.mouseVisible = True
                     xToHighlightMousePos, yToHighlightMousePos = mouse.getPos()
                     mouseHighlight.setPos([xToHighlightMousePos, yToHighlightMousePos])
-                    mouseHighlight.draw()
+                    mouse_pos = mouse.getPos()
+                    if not mouse_pos.all() == 0:
+                        mouseHighlight.draw()
                     #buttons, times = mouse.getPressed(getTime=True) #Use this if later decide to use mouse time instead of trialClock.getTime
                     if mouse.isPressedIn(cue_v, buttons=[0]) or autopilot or mouse.isPressedIn(cue_h, buttons=[0]):
                         x, y = mouse.getPos()
@@ -1464,7 +1466,8 @@ for thisTrial in trials:
                 win.mouseVisible = True
                 xToHighlightMousePos, yToHighlightMousePos = mouse.getPos()
                 mouseHighlight.setPos([xToHighlightMousePos, yToHighlightMousePos])
-                mouseHighlight.draw()
+                if not mouse_pos.all() == 0:
+                    mouseHighlight.draw()
                 if mouse.isPressedIn(cue_v, buttons=[0]) or autopilot or mouse.isPressedIn(cue_h, buttons=[0]):
                     x, y = mouse.getPos()
                     nClicks = nClicks + 1
