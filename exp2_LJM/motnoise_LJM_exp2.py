@@ -817,6 +817,8 @@ conditionInfo={}
 conditionInfo['conditions'] = ['500x500xdynamic','500x1000xdynamic','1000x500xdynamic',
     '1000x1000xdynamic','500x500xstatic','500x1000xstatic','1000x500xstatic','1000x1000xstatic']
 conditionInfo['nTrials'] = 125
+if autopilot == True:
+    conditionInfo['nTrials'] = 12
 
 stairs=[]
 for thisCondition in conditionInfo['conditions']:
