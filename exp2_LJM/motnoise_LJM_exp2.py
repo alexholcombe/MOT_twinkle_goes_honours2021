@@ -230,7 +230,7 @@ win.mouseVisible = False
 # Initialize components for Routine "before_trials"
 before_trialsClock = core.Clock()
 text_5 = visual.TextStim(win=win, name='text_5',
-    text='Signal to the experimenter when you are ready to begin the real trials.',
+    text='Press Y when you are ready to begin the real trials.',
     font='Arial',
     pos=(0, 0), height=20, wrapWidth=None, ori=0, 
     color='white', colorSpace='rgb', opacity=1, 
@@ -246,6 +246,21 @@ text = visual.TextStim(win=win, name='text',
     color='red', colorSpace='rgb', opacity=1, 
     languageStyle='LTR',
     depth=-10);
+
+nextText = visual.TextStim(win=win, name='text_4',
+    text='blank',
+    font='Arial',
+    pos=(0, -20), height=20, wrapWidth=None, ori=0, 
+    color='white', colorSpace='rgb', opacity=1, 
+    languageStyle='LTR',
+    depth=0.0);
+NextRemindCountText = visual.TextStim(win=win, name='text_4',
+    text='blank',
+    font='Arial',
+    pos=(0, 20), height=20, wrapWidth=None, ori=0, 
+    color='white', colorSpace='rgb', opacity=1, 
+    languageStyle='LTR',
+    depth=0.0);
 
 # Initialize components for Routine "trial"
 trialClock = core.Clock()
@@ -277,7 +292,7 @@ text_4 = visual.TextStim(win=win, name='text_4',
 routineTimer = core.CountdownTimer()  # to track time remaining of each (non-slip) routine 
 
 noise = visual.NoiseStim(
-    win=win, name='noise',
+    win = win, name='noise',
     mask=None,
     ori=0.0, pos=(0, 0), size=(2048,2048),
     sf=None,
@@ -285,7 +300,6 @@ noise = visual.NoiseStim(
     texRes=128, filter=None,
     noiseType='Uniform', noiseElementSize= (8, 8),
     interpolate=False, depth=0.0, units = 'pix')
-noise.buildNoise()
 
 # ------Prepare to start Routine "welcome"-------
 continueRoutine = True
@@ -489,15 +503,14 @@ o1 = visual.Rect(
     win=win, name ='o1',
     units="pix",
     size=(50,100),
-    fillColor=['grey'],
-    lineColor=['grey'], depth =-1.0)
+    fillColor=['red'],
+    lineColor=['red'], depth =-1.0)
 o1.setAutoDraw(False) #Because copies will be made of it by Puppetteer (P), and it will draw them, so o1 is never drawn
 
 for trialN in range(practiceConditionInfo['nTrials']):
     shuffle(pracStairs)
     for thisStair in pracStairs:
         thisIntensity = next(thisStair)
-        print(thisIntensity)
         track_filename = 'trajectories/T%00d%s.csv' % (thisIntensity,thisStair.extraInfo)
         if '500x500xdynamic' in thisStair.extraInfo or '1000x500xdynamic' in thisStair.extraInfo or '500x1000xstatic' in thisStair.extraInfo or '1000x1000xstatic' in thisStair.extraInfo:
             track_filename = 'trajectories/T%00d%sf.csv' % (thisIntensity,thisStair.extraInfo)
@@ -685,7 +698,7 @@ for trialN in range(practiceConditionInfo['nTrials']):
                             if (frameN-noise.frameNStart) % 1 == 0:
                                 noise.updateNoise()
                 else:
-                    noise.draw( )
+                    noise.draw()
                 if nKeys > 0:
                     thisStair.addResponse(wasUp)
                     expInfo['response'] = keys
@@ -699,6 +712,7 @@ for trialN in range(practiceConditionInfo['nTrials']):
                     continueRoutine = False
                     for i2 in range(n_objects):
                         P.objects[i2].setAutoDraw(False)
+                    win.flip()
                     thisExp.saveAsWideText(filename+'.csv', fileCollisionMethod='overwrite',delim='auto')
                     time.sleep(0.05) 
             
@@ -808,7 +822,7 @@ for thisCondition in conditionInfo['conditions']:
     thisStartVal = randint(-4,4)
     thisStair = data.StairHandler(startVal=thisStartVal, 
         stepSizes=[4,4,2,2,1,1], 
-        nTrials=125, nUp=1, nDown=1, 
+        nTrials=3, nUp=1, nDown=1, 
         extraInfo=thisCondition, 
         stepType='lin', minVal=-4, 
         maxVal=4)
@@ -929,6 +943,18 @@ trialNumber = 0
 
 for trialN in range(conditionInfo['nTrials']):
     shuffle(stairs)
+    pctTrialsCompletedForBreak = np.array([.2,.4,.6,.8])
+    breakTrials = np.round(conditionInfo['nTrials']*pctTrialsCompletedForBreak)
+    timeForTrialsRemainingMsg = np.any(trialN==breakTrials)
+    if timeForTrialsRemainingMsg:
+        nextText.setText('Press Y to continue')
+        progressMsg = 'Completed ' + str(trialN*8) + ' of ' + str(conditionInfo['nTrials']*8) + ' trials. Feel free to take a break!'
+        NextRemindCountText.setText(progressMsg)
+        win.flip(clearBuffer=True)
+        while not event.getKeys(keyList = 'y'):
+            nextText.draw()
+            NextRemindCountText.draw()
+            win.flip()
     for thisStair in stairs:
         thisIntensity = next(thisStair)
         track_filename = 'trajectories/T%00d%s.csv' % (thisIntensity,thisStair.extraInfo)
@@ -986,7 +1012,7 @@ for trialN in range(conditionInfo['nTrials']):
         pos_obj1 = P.objects[0].pos
         
         # keep track of which components have finished
-        trialComponents = [P.objects[0], cue, noise]
+        trialComponents = [P.objects[0], cue, noise,NextRemindCountText,nextText]
         for thisComponent in trialComponents:
             thisComponent.tStart = None
             thisComponent.tStop = None
@@ -1106,7 +1132,6 @@ for trialN in range(conditionInfo['nTrials']):
                             noise.draw() #AOH
                             if (frameN-noise.frameNStart) % 1 == 0:
                                 noise.updateNoise()
-                                
                 else:
                     noise.draw( )
                 if nKeys > 0:
@@ -1228,7 +1253,7 @@ for trialN in range(conditionInfo['nTrials']):
         # the Routine "trial" was not non-slip safe, so reset the non-slip timer
         routineTimer.reset()
         thisExp.nextEntry()
-    
+
 # completed 1 repeats of 'trials'
 
 
