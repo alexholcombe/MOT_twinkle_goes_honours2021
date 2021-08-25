@@ -26,7 +26,7 @@ from psychopy.hardware import keyboard
 from datetime import datetime
 
 debug=False #Print more information to console
-autopilot=False
+autopilot=True
 demo=False
 
 # Ensure that relative paths start from the same directory as this script
@@ -699,10 +699,11 @@ for trialN in range(practiceConditionInfo['nTrials']):
                                 noise.updateNoise()
                 else:
                     noise.draw()
-                if nKeys > 0:
-                    thisStair.addResponse(wasUp)
-                    expInfo['response'] = keys
-                    expInfo['wasUp'] = wasUp
+                if nKeys > 0 or autopilot == True:
+                    if autopilot == False:
+                        thisStair.addResponse(wasUp)
+                        expInfo['response'] = keys
+                        expInfo['wasUp'] = wasUp
                     expInfo['condition'] = thisStair.extraInfo
                     if 'f' in track_filename:
                         expInfo['flipStatus'] = 'flipped'
@@ -815,7 +816,7 @@ for trialN in range(practiceConditionInfo['nTrials']):
 conditionInfo={}
 conditionInfo['conditions'] = ['500x500xdynamic','500x1000xdynamic','1000x500xdynamic',
     '1000x1000xdynamic','500x500xstatic','500x1000xstatic','1000x500xstatic','1000x1000xstatic']
-conditionInfo['nTrials'] = 125
+conditionInfo['nTrials'] = 5
 
 stairs=[]
 for thisCondition in conditionInfo['conditions']:
@@ -946,7 +947,7 @@ for trialN in range(conditionInfo['nTrials']):
     pctTrialsCompletedForBreak = np.array([.2,.4,.6,.8])
     breakTrials = np.round(conditionInfo['nTrials']*pctTrialsCompletedForBreak)
     timeForTrialsRemainingMsg = np.any(trialN==breakTrials)
-    if timeForTrialsRemainingMsg:
+    if timeForTrialsRemainingMsg and autopilot == False:
         nextText.setText('Press Y to continue')
         progressMsg = 'Completed ' + str(trialN*8) + ' of ' + str(conditionInfo['nTrials']*8) + ' trials. Feel free to take a break!'
         NextRemindCountText.setText(progressMsg)
@@ -1134,10 +1135,11 @@ for trialN in range(conditionInfo['nTrials']):
                                 noise.updateNoise()
                 else:
                     noise.draw( )
-                if nKeys > 0:
-                    thisStair.addResponse(wasUp)
-                    expInfo['response'] = keys
-                    expInfo['wasUp'] = wasUp
+                if nKeys > 0 or autopilot == True:
+                    if autopilot == False:
+                        thisStair.addResponse(wasUp)
+                        expInfo['response'] = keys
+                        expInfo['wasUp'] = wasUp
                     expInfo['condition'] = thisStair.extraInfo
                     if 'f' in track_filename:
                         expInfo['flipStatus'] = 'flipped'
