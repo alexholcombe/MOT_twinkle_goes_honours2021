@@ -37,7 +37,7 @@ msg<- paste0("Number of files = ",as.character(nrow(fnames)), ".")
 print(msg)
 
 #Try reading an individual file
-analyse_only_most_recent_file <- F
+analyse_only_most_recent_file <- T
 if (analyse_only_most_recent_file) {
   #testfile <- "999_noiseMot_exp1_noise_2021_May_10_1219.csv"
   testfile<- files$files[1]
@@ -150,119 +150,84 @@ dhh <- dhh %>% mutate(noise_status = if (grepl('dynamic',condition) == TRUE) {'d
 #Calculate final velocity from preantepenultimatex0
 dhh <- dhh %>% mutate(dx = obj0finalX - obj0preantepenultimateX,
                       dy = obj0finalY - obj0preantepenultimateY)
-dhh<- dhh %>% mutate(finalSpeed =    sqrt(dx*dx + dy*dy) / (3*avgDurLastFrames/1000))
+dhh<- dhh %>% mutate(finalSpeedCheck =    sqrt(dx*dx + dy*dy) / (3*avgDurLastFrames/1000))
 
 #final speed
-ggplot(dhh, aes(finalSpeed)) + geom_histogram()
+ggplot(dhh, aes(finalSpeedCheck)) + geom_histogram()
 
-#fit quickpsy model to data?
-fit <- quickpsy(dhh, x = offset, k = wasUp, n = 125, grouping = .(first_speed, final_speed, noise_status), B = 1000)
+#create proportionUp, which is the mean of 'up's (1) and 'down's (0) for each offset in each condition
+dhf <- dhh %>%
+  group_by(first_speed,final_speed,noise_status, offset) %>%
+  summarise(proportionUp = mean(wasUp))
 
-#Analyse response by offset and condition?
-# dii <- dhh %>%
-#   group_by(condition,offset) %>% 
-#   summarise(proportionUp = mean(wasUp), se = sd(wasUp)/sqrt(nrow(dhh)))
-# 
-# ggplot(dii, aes(x=offset, y=proportionUp)) + geom_point() + stat_smooth(method = "lm", formula = y ~ x, size = 1) + facet_grid(condition~.) 
-#                         
-# #EXCLUDE OUTLIERS
-# outlierCriterion <- 220 # 150
-# dhh <- dhh %>% mutate(isOutlier = sqrt(xErr^2+yErr^2) > outlierCriterion)
-# 
-# dhh %>% filter(isOutlier==FALSE) %>%
-#   group_by(noise_present, first_speed, final_speed) %>% 
-#   summarise(average = mean(amountExtrapolation), se = sd(amountExtrapolation)/sqrt(nrow(dhh)))
-# 
-# ggplot(dhh, aes(x=offset, y=logwasUp)) + geom_point() + facet_grid(condition~.) 
-# 
-# #get means and standard error
-# 
-# #plot amount of extrapolation
-# ggplot(dhh %>% filter(isOutlier==FALSE), 
-#        aes(amountExtrapolation)) + geom_histogram()
-# 
-# #https://datavizpyr.com/rain-cloud-plots-using-half-violin-plot-with-jittered-data-points-in-r/
-# #Load half violin plot: geom_flat_violin()
-# source("https://raw.githubusercontent.com/datavizpyr/data/master/half_flat_violinplot.R")
-# 
-# #plot amount of extrapolation for each possible speed for first and final speed
-# ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(first_speed~.)
-# ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(final_speed~.)
-# ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(first_speed~final_speed)
-# 
-# #plot effect of noise on amount of extrapolation
-# ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~.)
-# 
-# #plot interaction between noise and each possible speed for first and final speed
-# ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~first_speed)
-# ggplot(dhh, aes(amountExtrapolation)) + geom_histogram() + facet_grid(noise_present~final_speed)
-# ggplot(dhh, aes(x=noise_present, y=amountExtrapolation)) + geom_point() + facet_grid(first_speed~final_speed) + stat_summary(fun.data = mean_cl_boot, fun.args=(conf.int=0.95), 
-#                                                                                                                              geom="errorbar", size=2, width=0.2, color='green4', alpha=0.84) 
-# 
-# gg<- ggplot(dhh %>% filter(isOutlier==FALSE),
-#        aes(x=noise_present,y=amountExtrapolation)) +
-#   geom_jitter(alpha=0.1, size=.5, width=0.15, height=0) + #geom_point() + 
-#   geom_hline(yintercept=0) + 
-#   #geom_flat_violin(fill="gray80",color="gray80") +
-#   stat_summary(fun.data = mean_cl_boot, fun.args=(conf.int=0.95), 
-#                geom="errorbar", size=2, width=0.2, color='green4', alpha=0.82) +
-#   stat_summary(fun.data = "mean_cl_boot", color="green", size=.5) +
-#   facet_grid(first_speed~.)
-# show(gg)
-# #ggsave( file.path("figures","MultipleStudiesPrevalencePerceptionDistributionsComplete.png"), width = 50, height = 30, units = "cm" )
-# 
-# #Twinkle goes t-test
-# nonoise = dhh %>% filter(isOutlier==FALSE , noise_present=="no_noise")
-# noise = dhh %>% filter(isOutlier==FALSE , noise_present=="noise")
-# t.test(nonoise$amountExtrapolation,noise$amountExtrapolation)
-# 
-# #Temporal integration t-test (although maybe a t-test is not appropriate, these conditions are meant to be similar rather than different)
-# slowinitialfastfinal = dhh %>% filter(isOutlier==FALSE , first_speed == 500, final_speed == 1000)
-# fastinitialslowfinal = dhh %>% filter(isOutlier==FALSE , first_speed == 1000, final_speed == 500)
-# t.test(slowinitialfastfinal$amountExtrapolation,fastinitialslowfinal$amountExtrapolation)
-# 
-# #Effect of speed t-test
-# slowinitialslowfinal = dhh %>% filter(isOutlier==FALSE , first_speed == 500, final_speed == 500)
-# fastinitialfastfinal = dhh %>% filter(isOutlier==FALSE , first_speed == 1000, final_speed == 1000)
-# t.test(slowinitialslowfinal$amountExtrapolation,fastinitialfastfinal$amountExtrapolation)
-# 
-# #Graph effect of eccentricity on extrapolation by noise
-# dhh <- dhh %>% mutate(eccentricity = sqrt(obj0finalX^2 + obj0finalY^2))
-# ggplot(dhh %>% filter(isOutlier==FALSE), aes(x=eccentricity, y=amountExtrapolation, color=noise_present)) +
-#   geom_point() + geom_smooth(method=lm, se=FALSE, fullrange=TRUE)
-# 
-# #Calculate linear regression model 
-# # model <- lm(dhh, formula = amountExtrapolation ~ noise_present + first_speed + final_speed +
-# #               first_speed*final_speed + first_speed*noise_present + final_speed*noise_present +
-# #               noise_present*first_speed*final_speed)
-# # summary(model)
-# options(contrasts = c("contr.sum","contr.poly"))
-# 
-# finish_line <- lm(amountExtrapolation ~ first_speed + final_speed + noise_present, data = dhh)
-# 
-# drop1(finish_line, .~., test="F")
-# 
-# #Same model with eccentricity as a confound
-# options(contrasts = c("contr.sum","contr.poly"))
-# 
-# finish_line <- lm(amountExtrapolation ~ first_speed + final_speed + noise_present + eccentricity, data = dhh)
-# 
-# drop1(finish_line, .~., test="F")
-# 
-# #Linear regression model with only noise, eccentricity, and their interaction term
-# modeleccentricityinteraction <- lm(dhh, formula = amountExtrapolation ~ noise_present + 
-#                                      eccentricity + velocityToFovea + noise_present*velocityToFovea + 
-#                                      eccentricity*velocityToFovea)
-# summary(modeleccentricityinteraction)
-# 
-# 
-# modelveltofoveainteraction <- lm(dhh, formula = amountExtrapolation ~ noise_present + velocityToFovea + noise_present*velocityToFovea)
-# modelveltofoveainteraction <- lm(dhh, formula = amountExtrapolation ~ noise_present)
-# summary(modelveltofoveainteraction)
-# 
-# #Plot error data
-# 
-# #Calculate various distance metrics
+#count how many times each offset is used in each condition
+dhg <- dhh %>% group_by(first_speed,final_speed,noise_status) %>% count(offset, name = 'timesOffsetUsed')
+
+#make a table with important data, including proportionUp and timesOffsetUsed
+dhi <- cbind(dhf,dhg[,5])
+dhi <- dhi %>% mutate(nUp = proportionUp*timesOffsetUsed)
+
+#put offset in terms of pixels
+dhi <- dhi %>% mutate(offsetInPixels = ifelse(offset == 0, 0, 2*(2^abs(offset))))
+for (n in 1:nrow(dhi)) {
+  if (dhi$offset[n] < 0)
+    dhi$offsetInPixels[n] <- -1*dhi$offsetInPixels[n]
+}
+
+
+#run the quickpsy models
+modelWithAllConditions <- quickpsy(dhi,offsetInPixels,nUp,timesOffsetUsed,grouping = .(noise_status,first_speed,final_speed), B = 500)
+modelWithJustNoise <- quickpsy(dhi,offsetInPixels,nUp,timesOffsetUsed,grouping = .(noise_status), B = 500)
+#instead of below model, code an interaction model by dummy coding speed conditions?
+#modelWithJustSpeed <- quickpsy(dhi,offsetInPixels,nUp,timesOffsetUsed,grouping = .(first_speed,final_speed), B = 500)
+modelWithJustFirstSpeed <- quickpsy(dhi,offsetInPixels,nUp,timesOffsetUsed,grouping = .(first_speed), B = 500)
+modelWithJustFinalSpeed <- quickpsy(dhi,offsetInPixels,nUp,timesOffsetUsed,grouping = .(final_speed), B = 500)
+
+modelWithAllConditions
+modelWithJustNoise
+
+#plot 'em
+plotcurves(modelWithAllConditions)
+plotcurves(modelWithJustNoise)
+plotcurves(modelWithJustSpeed)
+plotcurves(modelWithJustFirstSpeed)
+plotcurves(modelWithJustFinalSpeed)
+
+plotthresholds(modelWithAllConditions)
+plotthresholds(modelWithJustNoise)
+plotthresholds(modelWithJustSpeed)
+plotthresholds(modelWithJustFirstSpeed)
+plotthresholds(modelWithJustFinalSpeed)
+
+#having a go at calculating what I think could be effect size for difference between noise conditions
+threInfSupPooledStandardError <- function(model, N) {
+  cumuCondSE <- 0
+  numConds <- nrow(model$thresholds) 
+  for (c in 1:numConds) {
+    cumuCondSE <- cumuCondSE + ((model$thresholds$thresup[c] - model$thresholds$threinf[c])/3.92)
+  }
+  pooledSE <- cumuCondSE/numConds
+  pooledSD <<- pooledSE * sqrt(N)
+}
+threInfSupPooledStandardError(modelWithJustNoise, nrow(dhh))
+noiseThresholdMeanDiff <- modelWithJustNoise$thresholds$thre[1] - modelWithJustNoise$thresholds$thre[2]
+noiseEffectSize <- noiseThresholdMeanDiff/pooledSD
+noiseEffectSize
+
+#effect size for difference between first_speed conditions
+threInfSupPooledStandardError(modelWithJustFirstSpeed, nrow(dhh))
+firstSpeedThresholdMeanDiff <- modelWithJustFirstSpeed$thresholds$thre[1] - modelWithJustFirstSpeed$thresholds$thre[2]
+firstSpeedEffectSize <- firstSpeedThresholdMeanDiff/pooledSD
+firstSpeedEffectSize
+
+#effect size for difference between final_speed conditions
+threInfSupPooledStandardError(modelWithJustFinalSpeed, nrow(dhh))
+finalSpeedThresholdMeanDiff <- modelWithJustFinalSpeed$thresholds$thre[1] - modelWithJustFinalSpeed$thresholds$thre[2]
+finalSpeedEffectSize <- finalSpeedThresholdMeanDiff/pooledSD
+finalSpeedEffectSize
+
+meanEffectSize <- (abs(noiseEffectSize) + abs(firstSpeedEffectSize) + abs(finalSpeedEffectSize))/3
+meanEffectSize
 
 #Save data
 write_rds(dg, here("exp2","data_processed",outputFname))
