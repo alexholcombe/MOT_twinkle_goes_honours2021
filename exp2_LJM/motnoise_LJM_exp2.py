@@ -26,7 +26,7 @@ from psychopy.hardware import keyboard
 from datetime import datetime
 
 debug=False #Print more information to console
-autopilot=True
+autopilot=False
 demo=False
 
 # Ensure that relative paths start from the same directory as this script
@@ -825,7 +825,7 @@ for thisCondition in conditionInfo['conditions']:
     thisStartVal = randint(-4,4)
     thisStair = data.StairHandler(startVal=thisStartVal, 
         stepSizes=[4,4,2,2,1,1], 
-        nTrials=3, nUp=1, nDown=1, 
+        nTrials=125, nUp=1, nDown=1, 
         extraInfo=thisCondition, 
         stepType='lin', minVal=-4, 
         maxVal=4)
