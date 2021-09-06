@@ -26,7 +26,7 @@ from psychopy.hardware import keyboard
 from datetime import datetime
 
 debug=False #Print more information to console
-autopilot=False
+autopilot=True
 demo=False
 
 # Ensure that relative paths start from the same directory as this script
