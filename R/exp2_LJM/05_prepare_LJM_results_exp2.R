@@ -1,4 +1,5 @@
 if(!"quickpsy" %in% rownames(installed.packages())) install.packages("quickpsy")
+if(!"ggpubr" %in% rownames(installed.packages())) install.packages("ggpubr")
 
 library(tidyverse)
 theme_set(theme_classic(16))
@@ -7,13 +8,14 @@ library(dplyr)
 library(quickpsy)
 library(here)
 library(Hmisc)
+library(ggpubr)
 
 source(here("utils.R"))
 
 local_data_pth <- file.path(here("..","exp2_LJM"), "data")
 #dir(local_data_pth)
 
-outpth <- here("exp1_LJM")
+outpth <- here("exp2_LJM")
 
 #Get file list and sort by creation time, from most recent to oldest
 #https://stackoverflow.com/a/13762544/302378
@@ -37,7 +39,7 @@ msg<- paste0("Number of files = ",as.character(nrow(fnames)), ".")
 print(msg)
 
 #Try reading an individual file
-analyse_only_most_recent_file <- T
+analyse_only_most_recent_file <- F
 if (analyse_only_most_recent_file) {
   #testfile <- "999_noiseMot_exp1_noise_2021_May_10_1219.csv"
   testfile<- files$files[1]
@@ -49,6 +51,7 @@ if (analyse_only_most_recent_file) {
   df<- fnames %>%                  # read each file into a tibble and combine them all
     map_dfr(  function(x) {
                   df = read_csv(  file.path(local_data_pth, x) )
+                  df$participant <- as.character(df$participant)
                   df
                  } 
             )
@@ -115,9 +118,6 @@ dh %>% filter( anyHiccupsLastFrames > 0)  %>%
        summarise( trialsWithHiccupsLastFrames=  n(), avgMissedFramesInWholeTrial = mean(win.nDroppedFrames) )
 #Finished timing checks
 
-#Remove trials with timingHiccupsInLastFramesOfStimuli
-dh <- dh %>% filter(timingHiccupsInLastFramesOfStimuli == 0)
-
 #Create function that can parse array of finalStimFrameTimes
 calcAvgOfListFromPsychopy <- function( listAsTextFromPsychopy ){
   #Psychopy lists, like the frametimes the program outputs, end up as character vectors (strings)
@@ -144,8 +144,8 @@ dhh <- dhh %>% mutate(first_speed = if (grepl('500x1',condition) == TRUE) {500}
   else {1000})
 dhh <- dhh %>% mutate(final_speed = if (grepl('0x500',condition) == TRUE) {500} 
                       else {1000})
-dhh <- dhh %>% mutate(noise_status = if (grepl('dynamic',condition) == TRUE) {'dynamic'}
-                      else {'static'})
+dhh <- dhh %>% mutate(noise_status = if (grepl('dynamic',condition) == TRUE) {'Dynamic'}
+                      else {'Static'})
 
 #Calculate final velocity from preantepenultimatex0
 dhh <- dhh %>% mutate(dx = obj0finalX - obj0preantepenultimateX,
@@ -155,61 +155,256 @@ dhh<- dhh %>% mutate(finalSpeedCheck =    sqrt(dx*dx + dy*dy) / (3*avgDurLastFra
 #final speed
 ggplot(dhh, aes(finalSpeedCheck)) + geom_histogram()
 
+#anonymise participant results
+dhh <- dhh %>% mutate(participant = if (grepl('999',participant)) {'A'}
+                      else if (grepl('jc',participant)) {'B'}
+                      else if (grepl('RN',participant)) {'C'}
+                      else if (grepl('jvr',participant)) {'D'}
+                      else if (grepl('OSAY',participant)) {'E'})
+
+#Separate data by participant
+datasetPA <- dhh %>% filter(participant=="A")
+datasetPB <- dhh %>% filter(participant=="B")
+datasetPC <- dhh %>% filter(participant=="C")
+datasetPD <- dhh %>% filter(participant=="D")
+datasetPE <- dhh %>% filter(participant=="E")
+
+alldatasets <- list(datasetPA,datasetPB,datasetPC,datasetPD,datasetPE)
+
+for (dataset in alldatasets) {
 #create proportionUp, which is the mean of 'up's (1) and 'down's (0) for each offset in each condition
-dhf <- dhh %>%
-  group_by(first_speed,final_speed,noise_status, offset) %>%
+datasetUp <- dataset %>%
+  group_by(participant, first_speed,final_speed,noise_status, offset) %>%
   summarise(proportionUp = mean(wasUp))
 
+#contrast code the interactions between the three levels (but not the three-way interaction)
+datasetUp <- datasetUp %>% mutate(noise_firstspeed = if ((grepl('Dynamic',noise_status) == TRUE) && (first_speed == 500)) {1}
+                                  else if ((grepl('Dynamic',noise_status) == TRUE) && (first_speed == 1000)) {0}
+                                  else if ((grepl('Static',noise_status) == TRUE) && (first_speed == 500)) {0}
+                                  else if ((grepl('Static',noise_status) == TRUE) && (first_speed == 1000)) {1})
+datasetUp <- datasetUp %>% mutate(noise_finalspeed = if ((grepl('Dynamic',noise_status) == TRUE) && (final_speed == 500)) {1}
+           else if ((grepl('Dynamic',noise_status) == TRUE) && (final_speed == 1000)) {0}
+           else if ((grepl('Static',noise_status) == TRUE) && (final_speed == 500)) {0}
+           else if ((grepl('Static',noise_status) == TRUE) && (final_speed == 1000)) {1})
+datasetUp <- datasetUp %>% mutate(finalspeed_firstspeed = if ((first_speed == 500) && (final_speed == 500)) {1}
+           else if ((first_speed == 500) && (final_speed == 1000)) {0}
+           else if ((first_speed == 1000) && (final_speed == 500)) {0}
+           else if ((first_speed == 1000) && (final_speed == 1000)) {1})
+
+datasetUp <- datasetUp %>% mutate(offsetInDegrees = ifelse(offset == 0, 0, 0.1*(2^abs(offset))))
+for (n in 1:nrow(datasetUp)) {
+  if (datasetUp$offset[n] < 0)
+    datasetUp$offsetInDegrees[n] <- -1*datasetUp$offsetInDegrees[n]
+}
+
 #count how many times each offset is used in each condition
-dhg <- dhh %>% group_by(first_speed,final_speed,noise_status) %>% count(offset, name = 'timesOffsetUsed')
+datasetOffset <- dataset %>% group_by(first_speed,final_speed,noise_status) %>% count(offset, name = 'timesOffsetUsed')
 
 #make a table with important data, including proportionUp and timesOffsetUsed
-dhi <- cbind(dhf,dhg[,5])
-dhi <- dhi %>% mutate(nUp = proportionUp*timesOffsetUsed)
-
-#put offset in terms of pixels
-dhi <- dhi %>% mutate(offsetInPixels = ifelse(offset == 0, 0, 2*(2^abs(offset))))
-for (n in 1:nrow(dhi)) {
-  if (dhi$offset[n] < 0)
-    dhi$offsetInPixels[n] <- -1*dhi$offsetInPixels[n]
+#also run the quickpsy models
+if (datasetUp$participant[1] == 'A') {
+  datasetPA <- cbind(datasetUp,datasetOffset[,5])
+  datasetPA <- datasetPA %>% mutate(nUp = proportionUp*timesOffsetUsed)
+  PAmodelWithJustNoise <- quickpsy(datasetPA,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(noise_status), B = 500)
+  PAmodelWithJustFirstSpeed <- quickpsy(datasetPA,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(first_speed), B = 500)
+  PAmodelWithJustFinalSpeed <- quickpsy(datasetPA,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(final_speed), B = 500)
+  PAmodelWithNoiseFirstSpeedInteraction <- quickpsy(datasetPA,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(noise_firstspeed), B = 500)
+  PAmodelWithNoiseFinalSpeedInteraction <- quickpsy(datasetPA,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(noise_finalspeed), B = 500)
+  PAmodelWithFirstSpeedFinalSpeedInteraction <- quickpsy(datasetPA,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(finalspeed_firstspeed), B = 500)
+} else if (datasetUp$participant[1] == 'B') {
+  datasetPB <- cbind(datasetUp,datasetOffset[,5])
+  datasetPB <- datasetPB %>% mutate(nUp = proportionUp*timesOffsetUsed)
+  PBmodelWithJustNoise <- quickpsy(datasetPB,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(noise_status), B = 500)
+  PBmodelWithJustFirstSpeed <- quickpsy(datasetPB,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(first_speed), B = 500)
+  PBmodelWithJustFinalSpeed <- quickpsy(datasetPB,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(final_speed), B = 500)
+  PBmodelWithNoiseFirstSpeedInteraction <- quickpsy(datasetPB,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(noise_firstspeed), B = 500)
+  PBmodelWithNoiseFinalSpeedInteraction <- quickpsy(datasetPB,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(noise_finalspeed), B = 500)
+  PBmodelWithFirstSpeedFinalSpeedInteraction <- quickpsy(datasetPB,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(finalspeed_firstspeed), B = 500)
+} else if (datasetUp$participant[1] == 'C') {
+  datasetPC <- cbind(datasetUp,datasetOffset[,5])
+  datasetPC <- datasetPC %>% mutate(nUp = proportionUp*timesOffsetUsed)
+  PCmodelWithJustNoise <- quickpsy(datasetPC,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(noise_status), B = 500)
+  PCmodelWithJustFirstSpeed <- quickpsy(datasetPC,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(first_speed), B = 500)
+  PCmodelWithJustFinalSpeed <- quickpsy(datasetPC,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(final_speed), B = 500)
+  PCmodelWithNoiseFirstSpeedInteraction <- quickpsy(datasetPC,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(noise_firstspeed), B = 500)
+  PCmodelWithNoiseFinalSpeedInteraction <- quickpsy(datasetPC,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(noise_finalspeed), B = 500)
+  PCmodelWithFirstSpeedFinalSpeedInteraction <- quickpsy(datasetPC,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(finalspeed_firstspeed), B = 500)
+} else if (datasetUp$participant[1] == 'D') {
+  datasetPD <- cbind(datasetUp,datasetOffset[,5])
+  datasetPD <- datasetPD %>% mutate(nUp = proportionUp*timesOffsetUsed)
+  PDmodelWithJustNoise <- quickpsy(datasetPD,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(noise_status), B = 500)
+  PDmodelWithJustFirstSpeed <- quickpsy(datasetPD,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(first_speed), B = 500)
+  PDmodelWithJustFinalSpeed <- quickpsy(datasetPD,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(final_speed), B = 500)
+  PDmodelWithNoiseFirstSpeedInteraction <- quickpsy(datasetPD,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(noise_firstspeed), B = 500)
+  PDmodelWithNoiseFinalSpeedInteraction <- quickpsy(datasetPD,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(noise_finalspeed), B = 500)
+  PDmodelWithFirstSpeedFinalSpeedInteraction <- quickpsy(datasetPD,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(finalspeed_firstspeed), B = 500)
+} else if (datasetUp$participant[1] == 'E') {
+  datasetPE <- cbind(datasetUp,datasetOffset[,5])
+  datasetPE <- datasetPE %>% mutate(nUp = proportionUp*timesOffsetUsed)
+  PEmodelWithJustNoise <- quickpsy(datasetPE,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(noise_status), B = 500)
+  PEmodelWithJustFirstSpeed <- quickpsy(datasetPE,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(first_speed), B = 500)
+  PEmodelWithJustFinalSpeed <- quickpsy(datasetPE,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(final_speed), B = 500)
+  PEmodelWithNoiseFirstSpeedInteraction <- quickpsy(datasetPE,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(noise_firstspeed), B = 500)
+  PEmodelWithNoiseFinalSpeedInteraction <- quickpsy(datasetPE,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(noise_finalspeed), B = 500)
+  PEmodelWithFirstSpeedFinalSpeedInteraction <- quickpsy(datasetPE,offsetInDegrees,nUp,timesOffsetUsed,grouping = .(finalspeed_firstspeed), B = 500)
+}
 }
 
+alldatasets <- list(datasetPA,datasetPB,datasetPC,datasetPD,datasetPE)
 
-#run the quickpsy models
-modelWithAllConditions <- quickpsy(dhi,offsetInPixels,nUp,timesOffsetUsed,grouping = .(noise_status,first_speed,final_speed), B = 500)
-modelWithJustNoise <- quickpsy(dhi,offsetInPixels,nUp,timesOffsetUsed,grouping = .(noise_status), B = 500)
-#instead of below model, code an interaction model by dummy coding speed conditions?
-#modelWithJustSpeed <- quickpsy(dhi,offsetInPixels,nUp,timesOffsetUsed,grouping = .(first_speed,final_speed), B = 500)
-modelWithJustFirstSpeed <- quickpsy(dhi,offsetInPixels,nUp,timesOffsetUsed,grouping = .(first_speed), B = 500)
-modelWithJustFinalSpeed <- quickpsy(dhi,offsetInPixels,nUp,timesOffsetUsed,grouping = .(final_speed), B = 500)
+#bar graphs of noise threshold difference
+PAnoiseplot <- plotthresholds(PAmodelWithJustNoise) + labs(x="Noise condition", y="Offset (deg)", fill ="Noise condition") +
+  scale_fill_manual(values = c("Dynamic" = "orange", "Static" = "gray")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("A")
+PBnoiseplot <- plotthresholds(PBmodelWithJustNoise) + labs(x="Noise condition", y="Offset (deg)", fill ="Noise condition") +
+  scale_fill_manual(values = c("Dynamic" = "orange", "Static" = "gray")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("B")
+PCnoiseplot <- plotthresholds(PCmodelWithJustNoise) + labs(x="Noise condition", y="Offset (deg)", fill ="Noise condition") +
+  scale_fill_manual(values = c("Dynamic" = "orange", "Static" = "gray")) + expand_limits(y = c(-2,2)) +
+  theme(plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("C")
+PDnoiseplot <- plotthresholds(PDmodelWithJustNoise) + labs(x="Noise condition", y="Offset (deg)", fill ="Noise condition") +
+  scale_fill_manual(values = c("Dynamic" = "orange", "Static" = "gray")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("D*")
+PEnoiseplot <- plotthresholds(PEmodelWithJustNoise) + labs(x="Noise condition", y="Offset (deg)", fill ="Noise condition") +
+  scale_fill_manual(values = c("Dynamic" = "orange", "Static" = "gray")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("E*")
+ggarrange(PAnoiseplot,PBnoiseplot,PCnoiseplot,PDnoiseplot,PEnoiseplot, common.legend = TRUE)
 
-modelWithAllConditions
+#plot of noise curve differences
+PAnoisecurves <- plotcurves(PAmodelWithJustNoise) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("Dynamic" = "orange", "Static" = "gray")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("A")
+PBnoisecurves <- plotcurves(PBmodelWithJustNoise) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("Dynamic" = "orange", "Static" = "gray")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("B")
+PCnoisecurves <- plotcurves(PCmodelWithJustNoise) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("Dynamic" = "orange", "Static" = "gray")) + expand_limits(y = c(-2,2)) +
+  theme(plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("C")
+PDnoisecurves <- plotcurves(PDmodelWithJustNoise) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("Dynamic" = "orange", "Static" = "gray")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("D*")
+PEnoisecurves <- plotcurves(PEmodelWithJustNoise) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("Dynamic" = "orange", "Static" = "gray")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("E*")
+ggarrange(PAnoisecurves,PBnoisecurves,PCnoisecurves,PDnoisecurves,PEnoisecurves, common.legend = TRUE)
+
+#plot of initial speed curve differences
+PAFirstSpeedcurves <- plotcurves(PAmodelWithJustFirstSpeed) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("500" = "blue", "1000" = "red")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("A")
+PBFirstSpeedcurves <- plotcurves(PBmodelWithJustFirstSpeed) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("500" = "blue", "1000" = "red")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("B")
+PCFirstSpeedcurves <- plotcurves(PCmodelWithJustFirstSpeed) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("500" = "blue", "1000" = "red")) + expand_limits(y = c(-2,2)) +
+  theme(plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("C")
+PDFirstSpeedcurves <- plotcurves(PDmodelWithJustFirstSpeed) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("500" = "blue", "1000" = "red")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("D*")
+PEFirstSpeedcurves <- plotcurves(PEmodelWithJustFirstSpeed) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("500" = "blue", "1000" = "red")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("E*")
+ggarrange(PAFirstSpeedcurves,PBFirstSpeedcurves,PCFirstSpeedcurves,PDFirstSpeedcurves,PEFirstSpeedcurves, common.legend = TRUE)
+
+#plot of final speed curve differences
+PAFinalSpeedcurves <- plotcurves(PAmodelWithJustFinalSpeed) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("500" = "blue", "1000" = "red")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("A")
+PBFinalSpeedcurves <- plotcurves(PBmodelWithJustFinalSpeed) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("500" = "blue", "1000" = "red")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("B")
+PCFinalSpeedcurves <- plotcurves(PCmodelWithJustFinalSpeed) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("500" = "blue", "1000" = "red")) + expand_limits(y = c(-2,2)) +
+  theme(plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("C")
+PDFinalSpeedcurves <- plotcurves(PDmodelWithJustFinalSpeed) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("500" = "blue", "1000" = "red")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("D*")
+PEFinalSpeedcurves <- plotcurves(PEmodelWithJustFinalSpeed) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("500" = "blue", "1000" = "red")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("E*")
+ggarrange(PAFinalSpeedcurves,PBFinalSpeedcurves,PCFinalSpeedcurves,PDFinalSpeedcurves,PEFinalSpeedcurves, common.legend = TRUE)
+
+#plot of noise first speed interaction differences
+PANoiseFirstSpeedInteractioncurves <- plotcurves(PAmodelWithNoiseFirstSpeedInteraction) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("0" = "blue", "1" = "red")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("A")
+PBNoiseFirstSpeedInteractioncurves <- plotcurves(PBmodelWithNoiseFirstSpeedInteraction) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("0" = "blue", "1" = "red")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("B")
+PCNoiseFirstSpeedInteractioncurves <- plotcurves(PCmodelWithNoiseFirstSpeedInteraction) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("0" = "blue", "1" = "red")) + expand_limits(y = c(-2,2)) +
+  theme(plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("C")
+PDNoiseFirstSpeedInteractioncurves <- plotcurves(PDmodelWithNoiseFirstSpeedInteraction) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("0" = "blue", "1" = "red")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("D*")
+PENoiseFirstSpeedInteractioncurves <- plotcurves(PEmodelWithNoiseFirstSpeedInteraction) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("0" = "blue", "1" = "red")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("E*")
+ggarrange(PANoiseFirstSpeedInteractioncurves,PBNoiseFirstSpeedInteractioncurves,PCNoiseFirstSpeedInteractioncurves,
+          PDNoiseFirstSpeedInteractioncurves,PENoiseFirstSpeedInteractioncurves, common.legend = TRUE)
+
+#plot of noise final speed interaction differences
+PANoiseFinalSpeedInteractioncurves <- plotcurves(PAmodelWithNoiseFinalSpeedInteraction) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("0" = "blue", "1" = "red")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("A")
+PBNoiseFinalSpeedInteractioncurves <- plotcurves(PBmodelWithNoiseFinalSpeedInteraction) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("0" = "blue", "1" = "red")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("B")
+PCNoiseFinalSpeedInteractioncurves <- plotcurves(PCmodelWithNoiseFinalSpeedInteraction) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("0" = "blue", "1" = "red")) + expand_limits(y = c(-2,2)) +
+  theme(plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("C")
+PDNoiseFinalSpeedInteractioncurves <- plotcurves(PDmodelWithNoiseFinalSpeedInteraction) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("0" = "blue", "1" = "red")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("D*")
+PENoiseFinalSpeedInteractioncurves <- plotcurves(PEmodelWithNoiseFinalSpeedInteraction) + labs(x="Offset (deg)", y="Probability of an 'UP' response") +
+  scale_color_manual(values = c("0" = "blue", "1" = "red")) + expand_limits(y = c(-2,2)) + 
+  theme(legend.position = "none",plot.title = element_text(size = 32,hjust = .5, face = "bold")) + ggtitle("E*")
+ggarrange(PANoiseFinalSpeedInteractioncurves,PBNoiseFinalSpeedInteractioncurves,PCNoiseFinalSpeedInteractioncurves,
+          PDNoiseFinalSpeedInteractioncurves,PENoiseFinalSpeedInteractioncurves, common.legend = TRUE)
+
 modelWithJustNoise
+modelWithJustFirstSpeed
+modelWithJustFinalSpeed
+modelWithNoiseFirstSpeedInteraction
+modelWithNoiseFinalSpeedInteraction
+modelWithFirstSpeedFinalSpeedInteraction
 
 #plot 'em
-plotcurves(modelWithAllConditions)
-plotcurves(modelWithJustNoise)
-plotcurves(modelWithJustSpeed)
+plotcurves(PAmodelWithJustNoise)
 plotcurves(modelWithJustFirstSpeed)
 plotcurves(modelWithJustFinalSpeed)
+plotcurves(modelWithNoiseFirstSpeedInteraction)
+plotcurves(modelWithNoiseFinalSpeedInteraction)
+plotcurves(modelWithFirstSpeedFinalSpeedInteraction)
 
-plotthresholds(modelWithAllConditions)
-plotthresholds(modelWithJustNoise)
-plotthresholds(modelWithJustSpeed)
+plotthresholds(modelWithJustNoise) + labs(x="Noise condition", y="Offset (deg)", fill ="Noise condition") +
+  scale_fill_manual(values = c("Dynamic" = "orange", "Static" = "gray"))
 plotthresholds(modelWithJustFirstSpeed)
 plotthresholds(modelWithJustFinalSpeed)
+plotthresholds(modelWithNoiseFirstSpeedInteraction)
+plotthresholds(modelWithNoiseFinalSpeedInteraction)
+plotthresholds(modelWithFirstSpeedFinalSpeedInteraction)
 
-#having a go at calculating what I think could be effect size for difference between noise conditions
-threInfSupPooledStandardError <- function(model, N) {
+#t test of difference between noise conditions
+turnGroupCIsIntoGroupDifferenceCIs <- function(model) {
   cumuCondSE <- 0
-  numConds <- nrow(model$thresholds) 
-  for (c in 1:numConds) {
-    cumuCondSE <- cumuCondSE + ((model$thresholds$thresup[c] - model$thresholds$threinf[c])/3.92)
-  }
-  pooledSE <- cumuCondSE/numConds
-  pooledSD <<- pooledSE * sqrt(N)
+  numConds <- 2
+  firstGroupDiffCI <- (model$thresholds$thresup[1] - model$thresholds$thre[1])/.95*.83
+  secondGroupDiffCI <- ( model$thresholds$thresup[2] - model$thresholds$thre[2])/.95*.83
+  groupDiffModel <- model
+  groupDiffModel$thresholds$threinf[1] = (model$thresholds$thre[1] - firstGroupDiffCI)
+  groupDiffModel$thresholds$thresup[1] = (model$thresholds$thre[1] + firstGroupDiffCI)
+  groupDiffModel$thresholds$threinf[2] = (model$thresholds$thre[2] - firstGroupDiffCI)
+  groupDiffModel$thresholds$thresup[2] = (model$thresholds$thre[2] + firstGroupDiffCI)
+  groupDiffModel
 }
-threInfSupPooledStandardError(modelWithJustNoise, nrow(dhh))
+turnGroupCIsIntoGroupDifferenceCIs(modelWithJustNoise)
+turnGroupCIsIntoGroupDifferenceCIs(modelWithJustFirstSpeed)
+turnGroupCIsIntoGroupDifferenceCIs(modelWithJustFinalSpeed)
+turnGroupCIsIntoGroupDifferenceCIs(modelWithNoiseFirstSpeedInteraction)
+turnGroupCIsIntoGroupDifferenceCIs(modelWithNoiseFinalSpeedInteraction)
+turnGroupCIsIntoGroupDifferenceCIs(modelWithFirstSpeedFinalSpeedInteraction)
+
 noiseThresholdMeanDiff <- modelWithJustNoise$thresholds$thre[1] - modelWithJustNoise$thresholds$thre[2]
 noiseEffectSize <- noiseThresholdMeanDiff/pooledSD
 noiseEffectSize
@@ -232,23 +427,3 @@ meanEffectSize
 #Save data
 write_rds(dg, here("exp2","data_processed",outputFname))
 
-
-# prepare trajectories for analysis --------------------------------------
-
-trajectories_pth <- file.path(here("exp1"),"trajectories")
-
-files <- dir(trajectories_pth, pattern = "*.csv") # get file names
-
-df_trajectories <- files %>% map_dfr(function(x) 
-                     read_csv(file.path(trajectories_pth, x), col_names =F, col_types = cols(.default = "d")))
-
-#Why are there 500 trajectory ids and 81 of each?
-df_trajectories$trajectory_id <- rep(1:500, each = nrow(df_trajectories)/500)
-
-colnames(df_trajectories)[1:17] <- c("t",
-                                     expand.grid(c("X","y"),1:8) %>% tidyr::unite(cn, Var1, Var2,sep="") %>% pull(cn))
-
-#This is just to reorder the columns
-df_trajectories <- df_trajectories %>% select(trajectory_id,everything())
-
-saveRDS(df_trajectories, file.path(outpth, "trajectories_200406.rds"))
